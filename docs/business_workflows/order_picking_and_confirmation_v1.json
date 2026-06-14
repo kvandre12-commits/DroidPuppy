@@ -1,0 +1,73 @@
+{
+  "workflow_name": "order_picking_and_confirmation_v1",
+  "industry": "operations",
+  "business_goal": "Reduce friction and mismatch risk during order picking and confirmation.",
+  "current_manual_flow": [
+    "Open the picking or task app",
+    "Review the next item or order line",
+    "Physically locate the item",
+    "Check quantity or variant",
+    "Confirm the result in the app",
+    "Switch to another app or message if something is wrong",
+    "Re-type the mismatch details manually",
+    "Rebuild context later if follow-up is needed"
+  ],
+  "pain_points": [
+    "repeated confirmation steps across awkward app screens",
+    "mismatch between physical reality and app state",
+    "too much retyping when escalating a missing or wrong item",
+    "unclear completion state",
+    "workers lose time bouncing between picking and escalation tools"
+  ],
+  "success_criteria": [
+    "faster confirmation flow",
+    "fewer app-switching interruptions",
+    "cleaner mismatch escalation",
+    "less ambiguity about completion state",
+    "more dependable evidence when something is wrong"
+  ],
+  "intervention_points": [
+    {
+      "name": "task_entry_and_state",
+      "tools": [
+        "android_app_profile",
+        "android_workflow_feasibility_assess",
+        "android_intent_audit_stack"
+      ]
+    },
+    {
+      "name": "confirmation_support",
+      "tools": [
+        "android_handoff_text",
+        "android_app_workflow_run",
+        "android_intent_send"
+      ]
+    },
+    {
+      "name": "mismatch_escalation",
+      "tools": [
+        "android_support_issue_draft",
+        "android_support_bundle_collect",
+        "android_support_share_wizard"
+      ]
+    },
+    {
+      "name": "ui_fallback",
+      "tools": [
+        "android_ui_capability_audit_app",
+        "android_ui_dump_hierarchy",
+        "android_ui_dump_find",
+        "android_ui_tap_match",
+        "android_input_text"
+      ]
+    }
+  ],
+  "rollout_phases": [
+    "stack_audit",
+    "direct_handoff_pilot",
+    "mismatch_packaging",
+    "ui_guided_expansion"
+  ],
+  "support_posture": "Always preserve mismatch summary, visible task state, and escalation-ready evidence.",
+  "status": "draft_v1"
+}
