@@ -4,7 +4,7 @@
 > Last generated: 2026-06-14. Regenerate with `python scripts/gen_plugin_reference.py`.
 > Descriptions marked _(derived)_ were synthesized from the tool name (the source had no docstring — a good first contribution target).
 
-**33 plugins · 108 tools**
+**34 plugins · 110 tools**
 
 ## Index
 
@@ -19,6 +19,7 @@
 - [`android_cdp_bridge`](#android-cdp-bridge) — Register Android CDP bridge tools. (3 tools)
 - [`android_cdp_client`](#android-cdp-client) — Register Android CDP client tools. (4 tools)
 - [`android_dumpsys_kit`](#android-dumpsys-kit) — Register Android dumpsys kit tools. (3 tools)
+- [`android_edge_kit`](#android-edge-kit) — Register DroidPuppy 'edge' element-testing tools. (2 tools)
 - [`android_friendly_router`](#android-friendly-router) — Register friendly Android router tools. (2 tools)
 - [`android_handoff_kit`](#android-handoff-kit) — Register Android handoff tools. (5 tools)
 - [`android_input_kit`](#android-input-kit) — Register Android input kit tools. (6 tools)
@@ -155,6 +156,15 @@ Register Android dumpsys kit tools.
 | `android_dumpsys_doctor` | Dumpsys doctor _(derived)_ |
 | `android_dumpsys_service` | Dumpsys service _(derived)_ |
 | `android_dumpsys_snapshot` | Dumpsys snapshot _(derived)_ |
+
+## android_edge_kit
+
+Register DroidPuppy 'edge' element-testing tools.
+
+| Tool | Description |
+|------|-------------|
+| `android_edge_test_element` | Test a CSS selector on a live page: existence, count, text, attrs, geometry, visibility. |
+| `android_edge_assert_text` | Assert the first element matching a selector contains expected text; returns passed + actual. |
 
 ## android_friendly_router
 
