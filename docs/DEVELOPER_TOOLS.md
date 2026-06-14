@@ -40,6 +40,9 @@ This file lists the Android-focused tools packaged in DroidPuppy.
 - `android_open`
 - `android_list_shortcuts`
 
+## droidpuppy_doctor
+- `droidpuppy_doctor` — one-shot stack health check: platform, core commands, adb, browsers, optional CDP probe (`deep=True`), and a self-inventory of installed plugins. Returns per-check `pass`/`warn`/`fail` plus prioritized `next_steps`.
+
 ## Why this matters
 
 These tools together make Code Puppy feel phone-native instead of merely

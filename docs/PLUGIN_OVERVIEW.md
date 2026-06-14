@@ -59,6 +59,15 @@ Key tools:
 - `android_open`
 - `android_list_shortcuts`
 
+## droidpuppy_doctor
+Purpose: a single master health check for the whole DroidPuppy stack.
+
+Key tools:
+- `droidpuppy_doctor`
+
+It aggregates the lower-level `*_doctor`/`*_status` checks, verifies core Android
+commands and browsers, optionally probes CDP, and inventories installed plugins.
+
 ## Overall shape
 
 The stack is layered:
