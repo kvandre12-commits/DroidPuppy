@@ -1,0 +1,73 @@
+{
+  "workflow_name": "inventory_lookup_and_escalation_v1",
+  "industry": "retail",
+  "business_goal": "Reduce friction when checking item state and escalating inventory issues.",
+  "current_manual_flow": [
+    "Open the lookup tool",
+    "Search for the item",
+    "Review item details",
+    "Copy or remember key details",
+    "Open another app or channel",
+    "Re-type or paste the details",
+    "Escalate if something looks wrong",
+    "Reconstruct context again if support asks questions"
+  ],
+  "pain_points": [
+    "too much app switching",
+    "repeated copy/paste or retyping",
+    "inconsistent escalation path",
+    "weak support evidence",
+    "item details get lost between apps"
+  ],
+  "success_criteria": [
+    "fewer manual copy/paste steps",
+    "faster escalation",
+    "more dependable support evidence",
+    "less context loss between apps",
+    "more repeatable process for ordinary workers"
+  ],
+  "intervention_points": [
+    {
+      "name": "launch_and_entry",
+      "tools": [
+        "android_intent_send",
+        "android_handoff_url",
+        "android_app_workflow_run"
+      ]
+    },
+    {
+      "name": "information_movement",
+      "tools": [
+        "android_handoff_text",
+        "android_handoff_url",
+        "android_support_share_wizard"
+      ]
+    },
+    {
+      "name": "escalation_support",
+      "tools": [
+        "android_support_bundle_collect",
+        "android_support_issue_draft",
+        "android_support_share_wizard"
+      ]
+    },
+    {
+      "name": "ui_fallback",
+      "tools": [
+        "android_ui_capability_audit_app",
+        "android_ui_dump_hierarchy",
+        "android_ui_dump_find",
+        "android_ui_tap_match",
+        "android_input_text"
+      ]
+    }
+  ],
+  "rollout_phases": [
+    "stack_audit",
+    "direct_handoff_pilot",
+    "escalation_packaging",
+    "ui_guided_expansion"
+  ],
+  "support_posture": "Always preserve a support bundle and escalation artifact path.",
+  "status": "draft_v1"
+}

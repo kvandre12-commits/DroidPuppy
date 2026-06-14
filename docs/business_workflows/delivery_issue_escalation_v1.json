@@ -1,0 +1,74 @@
+{
+  "workflow_name": "delivery_issue_escalation_v1",
+  "industry": "delivery",
+  "business_goal": "Reduce friction when escalating a live delivery issue.",
+  "current_manual_flow": [
+    "Open the delivery app",
+    "Check order or route state",
+    "Switch to another app or support surface",
+    "Re-type what happened from memory",
+    "Go back to the original app to confirm details",
+    "Capture screenshots late or not at all",
+    "Escalate with incomplete context",
+    "Repeat the story again when support asks follow-up questions"
+  ],
+  "pain_points": [
+    "app state is hard to move across tools",
+    "time pressure makes notes sloppy",
+    "important evidence is captured too late",
+    "escalation path is inconsistent",
+    "issue details get reconstructed multiple times"
+  ],
+  "success_criteria": [
+    "faster escalation",
+    "cleaner issue summaries",
+    "more dependable support evidence",
+    "less back-and-forth with support",
+    "less context loss between the delivery app and escalation destination"
+  ],
+  "intervention_points": [
+    {
+      "name": "issue_state_gathering",
+      "tools": [
+        "android_app_profile",
+        "android_workflow_feasibility_assess",
+        "android_intent_audit_stack",
+        "android_ui_capability_audit_stack"
+      ]
+    },
+    {
+      "name": "outbound_escalation_handoff",
+      "tools": [
+        "android_handoff_text",
+        "android_handoff_url",
+        "android_support_share_wizard"
+      ]
+    },
+    {
+      "name": "evidence_preservation",
+      "tools": [
+        "android_support_bundle_collect",
+        "android_support_issue_draft",
+        "android_support_share_wizard"
+      ]
+    },
+    {
+      "name": "ui_fallback",
+      "tools": [
+        "android_ui_capability_audit_app",
+        "android_ui_dump_hierarchy",
+        "android_ui_dump_find",
+        "android_ui_tap_match",
+        "android_input_text"
+      ]
+    }
+  ],
+  "rollout_phases": [
+    "stack_audit",
+    "direct_handoff_pilot",
+    "evidence_and_escalation_packaging",
+    "ui_guided_expansion"
+  ],
+  "support_posture": "Always preserve issue summary, visible state, and escalation-ready evidence.",
+  "status": "draft_v1"
+}

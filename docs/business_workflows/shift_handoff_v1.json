@@ -1,0 +1,73 @@
+{
+  "workflow_name": "shift_handoff_v1",
+  "industry": "operations",
+  "business_goal": "Reduce friction and context loss during shift handoff.",
+  "current_manual_flow": [
+    "Open one or more work apps",
+    "Check what is unfinished",
+    "Remember or jot down important details",
+    "Open notes, messaging, or support channel",
+    "Re-type status updates manually",
+    "Mention issues from memory",
+    "Forget at least one piece of context",
+    "Next shift re-discovers missing information later"
+  ],
+  "pain_points": [
+    "context gets lost between apps",
+    "handoff quality depends too much on memory",
+    "repeated retyping of status notes",
+    "unclear priority ordering",
+    "issues are mentioned without evidence"
+  ],
+  "success_criteria": [
+    "cleaner handoff summaries",
+    "less manual retyping",
+    "clearer priority carryover",
+    "faster next-shift ramp-up",
+    "better escalation context"
+  ],
+  "intervention_points": [
+    {
+      "name": "state_gathering",
+      "tools": [
+        "android_app_profile",
+        "android_intent_audit_stack",
+        "android_ui_capability_audit_stack"
+      ]
+    },
+    {
+      "name": "summary_movement",
+      "tools": [
+        "android_handoff_text",
+        "android_support_share_wizard",
+        "android_app_workflow_run"
+      ]
+    },
+    {
+      "name": "escalation_support",
+      "tools": [
+        "android_support_issue_draft",
+        "android_support_bundle_collect",
+        "android_support_share_wizard"
+      ]
+    },
+    {
+      "name": "ui_fallback",
+      "tools": [
+        "android_ui_capability_audit_app",
+        "android_ui_dump_hierarchy",
+        "android_ui_dump_find",
+        "android_ui_tap_match",
+        "android_input_text"
+      ]
+    }
+  ],
+  "rollout_phases": [
+    "stack_audit",
+    "direct_handoff_pilot",
+    "escalation_packaging",
+    "ui_guided_expansion"
+  ],
+  "support_posture": "Always preserve unresolved issue context and escalation-ready handoff artifacts.",
+  "status": "draft_v1"
+}
