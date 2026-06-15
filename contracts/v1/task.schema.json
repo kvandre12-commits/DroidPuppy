@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/task.schema.json",
+  "title": "Task",
+  "description": "L2 -> L3 contract. One executable unit produced by the Orchestra Agent's structural decomposition of an Intent. Carries everything an adapter needs to run it safely and everything the Orchestra needs to recover it.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "task_id": { "type": "string" },
+    "intent_id": { "type": "string", "description": "Owning intent." },
+    "parent_task_id": { "type": ["string", "null"] },
+    "type": { "type": "string", "description": "Logical task type." },
+    "target_adapter": {
+      "type": "string",
+      "description": "Which L3 execution adapter runs this.",
+      "examples": ["droidpuppy", "broker_mcp", "cloud", "tv", "research"]
+    },
+    "inputs": { "type": "object", "additionalProperties": true },
+    "output_schema_ref": {
+      "type": ["string", "null"],
+      "description": "Schema the produced output must validate against (for handoffs)."
+    },
+    "side_effect_class": {
+      "type": "string",
+      "description": "Drives retry/recovery safety. Recovery logic branches on this.",
+      "enum": ["read", "idempotent", "nonidempotent", "irreversible"]
+    },
+    "retry_policy": {
+      "type": "object",
+      "properties": {
+        "max_attempts": { "type": "integer", "minimum": 0, "default": 0 },
+        "backoff": { "type": "string", "enum": ["none", "fixed", "exponential"], "default": "none" },
+        "retry_on": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["max_attempts"]
+    },
+    "compensation_ref": {
+      "type": ["string", "null"],
+      "description": "Capability/task that undoes this one (saga compensation)."
+    },
+    "timeout_ms": { "type": "integer", "minimum": 0 },
+    "depends_on": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "task_ids that must succeed first (DAG edges)."
+    },
+    "idempotency_key": {
+      "type": ["string", "null"],
+      "description": "Dedupe key so resume-after-crash does not double-fire."
+    },
+    "requires_approval": { "type": "boolean", "default": false },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "ready", "running", "awaiting_approval", "succeeded", "failed", "compensated", "aborted"],
+      "default": "pending"
+    },
+    "attempts": { "type": "integer", "minimum": 0, "default": 0 }
+  },
+  "required": ["contract_version", "task_id", "intent_id", "type", "target_adapter", "side_effect_class", "status"],
+  "additionalProperties": false
+}

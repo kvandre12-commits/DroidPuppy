@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/observation.schema.json",
+  "title": "Observation",
+  "description": "L3/L4 -> kernel contract. The observability spine: every progress update, metric, contract violation, or stall is an Observation appended to the event log. Nothing runs in the dark.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "observation_id": { "type": "string" },
+    "intent_id": { "type": "string" },
+    "task_id": { "type": ["string", "null"] },
+    "type": {
+      "type": "string",
+      "enum": ["progress", "metric", "log", "contract_violation", "stall", "approval_required"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["info", "warn", "error", "critical"],
+      "default": "info"
+    },
+    "payload": { "type": "object", "additionalProperties": true },
+    "source_adapter": { "type": ["string", "null"] },
+    "ts": { "type": "string", "format": "date-time" }
+  },
+  "required": ["contract_version", "observation_id", "intent_id", "type", "severity", "ts"],
+  "additionalProperties": false
+}

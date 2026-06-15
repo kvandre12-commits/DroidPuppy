@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/result.schema.json",
+  "title": "Result",
+  "description": "L2 -> L1 contract. Closes the control loop: the Orchestra Agent reports the outcome of an Intent back to the decision layer.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "result_id": { "type": "string" },
+    "intent_id": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["success", "partial", "failed", "aborted"]
+    },
+    "outputs": { "type": "object", "additionalProperties": true },
+    "task_summary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task_id": { "type": "string" },
+          "status": { "type": "string" }
+        },
+        "required": ["task_id", "status"],
+        "additionalProperties": false
+      }
+    },
+    "compensations_applied": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "task_ids whose compensation (undo) was run during recovery."
+    },
+    "error": {
+      "type": ["object", "null"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    },
+    "completed_at": { "type": "string", "format": "date-time" }
+  },
+  "required": ["contract_version", "result_id", "intent_id", "status"],
+  "additionalProperties": false
+}

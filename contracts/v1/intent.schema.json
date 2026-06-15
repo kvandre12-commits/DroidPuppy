@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/intent.schema.json",
+  "title": "Intent",
+  "description": "L1 -> L2 contract. A declarative goal handed from SharpEdge (decision) to the Orchestra Agent (coordination). States WHAT should be true, never HOW.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "intent_id": { "type": "string", "description": "Unique id (uuid)." },
+    "domain": {
+      "type": "string",
+      "description": "Domain that produced this intent.",
+      "examples": ["trading", "android_automation", "operations", "research", "streaming"]
+    },
+    "statement": {
+      "type": "string",
+      "description": "Human-readable intent, any altitude (strategic to atomic)."
+    },
+    "goal": {
+      "type": "object",
+      "description": "Machine-readable goal.",
+      "properties": {
+        "type": { "type": "string" },
+        "params": { "type": "object", "additionalProperties": true }
+      },
+      "required": ["type"]
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Boundaries the Orchestra must respect."
+    },
+    "authority": {
+      "type": "object",
+      "description": "Human/automated authorization required before irreversible work.",
+      "properties": {
+        "required": { "type": "boolean", "default": false },
+        "approver": { "type": ["string", "null"] }
+      },
+      "required": ["required"]
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "normal", "high", "critical"],
+      "default": "normal"
+    },
+    "deadline": { "type": ["string", "null"], "format": "date-time" },
+    "success_criteria": { "type": "array", "items": { "type": "string" } },
+    "created_by": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["accepted", "planning", "executing", "done", "failed", "aborted"],
+      "default": "accepted"
+    }
+  },
+  "required": ["contract_version", "intent_id", "domain", "goal", "authority", "status"],
+  "additionalProperties": false
+}
