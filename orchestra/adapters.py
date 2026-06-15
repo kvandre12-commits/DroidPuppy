@@ -5,13 +5,16 @@ The Orchestra Agent does not care which adapter it is - DroidPuppy, a broker
 MCP, cloud, TV - they all look the same from above. This is what lets L3 be
 pluralized instead of welded to Android.
 
-For the vertical slice we ship one real, idempotent adapter: WatchlistAdapter.
+Ships two adapters: WatchlistAdapter (idempotent local capability) and
+DroidPuppyAdapter (real Android device actions via `am`).
 """
 
 from __future__ import annotations
 
 import json
+import shutil
 import sqlite3
+import subprocess
 from typing import Any, Protocol
 
 
@@ -53,6 +56,55 @@ class WatchlistAdapter:
         return {
             "status": "succeeded",
             "outputs": {"watchlist_key": key, "already_present": bool(existing)},
+        }
+
+
+class DroidPuppyAdapter:
+    """Wraps real Android device actions via the `am` capability DroidPuppy exposes.
+
+    Supported task types:
+      - open_url   : inputs {url, browser?} -> launch a URL (optionally in a
+                     specific browser package)
+      - launch_app : inputs {package}       -> launch an app by package
+
+    Launching is idempotent-ish (re-launch just refocuses), so retry is safe.
+    This is the orchestra reaching into the real device - L3 doing actual work.
+    """
+
+    name = "droidpuppy"
+
+    def run(self, task: dict[str, Any]) -> dict[str, Any]:
+        am = shutil.which("am")
+        if not am:
+            return {"status": "failed",
+                    "error": {"code": "no_am", "message": "am command not found"}}
+        ttype = task.get("type")
+        ins = task.get("inputs", {})
+        if ttype == "open_url":
+            args = [am, "start", "-a", "android.intent.action.VIEW",
+                    "-d", ins.get("url", "")]
+            if ins.get("browser"):
+                args += ["-p", ins["browser"]]
+        elif ttype == "launch_app":
+            args = [am, "start", "-a", "android.intent.action.MAIN",
+                    "-c", "android.intent.category.LAUNCHER",
+                    "-p", ins.get("package", "")]
+        else:
+            return {"status": "failed",
+                    "error": {"code": "unknown_type",
+                              "message": f"DroidPuppyAdapter cannot do '{ttype}'"}}
+        try:
+            res = subprocess.run(args, capture_output=True, text=True, timeout=20)
+        except Exception as exc:  # noqa: BLE001 - never crash the orchestra
+            return {"status": "failed",
+                    "error": {"code": "exec_error", "message": str(exc)}}
+        ok = res.returncode == 0
+        return {
+            "status": "succeeded" if ok else "failed",
+            "outputs": {"command": " ".join(args), "exit_code": res.returncode,
+                        "stdout": res.stdout.strip()[:200]},
+            "error": None if ok else {"code": "am_failed",
+                                      "message": res.stderr.strip()[:200]},
         }
 
 

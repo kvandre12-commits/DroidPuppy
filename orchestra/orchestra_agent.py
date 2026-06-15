@@ -72,10 +72,18 @@ class OrchestraAgent:
     # ---- responsibility 1: structural decomposition (NOT domain analysis) ----
     def _decompose(self, intent: dict[str, Any]) -> list[dict[str, Any]]:
         goal = intent["goal"]
-        if goal["type"] == "watchlist_add":
+        gtype = goal["type"]
+        params = goal.get("params", {})
+        if gtype == "watchlist_add":
             return [self._make_task(intent, "add_to_watchlist", "watchlist",
-                                    goal.get("params", {}), side_effect="idempotent")]
-        raise ValueError(f"no decomposition rule for goal type '{goal['type']}'")
+                                    params, side_effect="idempotent")]
+        if gtype == "open_url":
+            return [self._make_task(intent, "open_url", "droidpuppy",
+                                    params, side_effect="idempotent")]
+        if gtype == "launch_app":
+            return [self._make_task(intent, "launch_app", "droidpuppy",
+                                    params, side_effect="idempotent")]
+        raise ValueError(f"no decomposition rule for goal type '{gtype}'")
 
     def _make_task(self, intent: dict[str, Any], ttype: str, adapter: str,
                    inputs: dict[str, Any], side_effect: str = "read",
