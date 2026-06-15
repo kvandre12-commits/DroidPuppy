@@ -23,6 +23,7 @@ import jsonschema
 
 from adapters import Registry
 from kernel import Kernel
+from planners import PlannerRegistry, default_registry
 
 _SCHEMAS = ["intent", "task", "handoff", "observation", "result"]
 
@@ -36,9 +37,11 @@ def _uid(prefix: str) -> str:
 
 
 class OrchestraAgent:
-    def __init__(self, kernel: Kernel, registry: Registry, contracts_dir: str) -> None:
+    def __init__(self, kernel: Kernel, registry: Registry, contracts_dir: str,
+                 planners: PlannerRegistry | None = None) -> None:
         self.k = kernel
         self.reg = registry
+        self.planners = planners or default_registry()
         self.schemas = {
             name: json.load(open(os.path.join(contracts_dir, f"{name}.schema.json")))
             for name in _SCHEMAS
@@ -71,24 +74,17 @@ class OrchestraAgent:
 
     # ---- responsibility 1: structural decomposition (NOT domain analysis) ----
     def _decompose(self, intent: dict[str, Any]) -> list[dict[str, Any]]:
-        goal = intent["goal"]
-        gtype = goal["type"]
-        params = goal.get("params", {})
-        if gtype == "watchlist_add":
-            return [self._make_task(intent, "add_to_watchlist", "watchlist",
-                                    params, side_effect="idempotent")]
-        if gtype == "open_url":
-            return [self._make_task(intent, "open_url", "droidpuppy",
-                                    params, side_effect="idempotent")]
-        if gtype == "launch_app":
-            return [self._make_task(intent, "launch_app", "droidpuppy",
-                                    params, side_effect="idempotent")]
-        if gtype == "place_order":
-            # irreversible + must be approved by a human before it can run
-            return [self._make_task(intent, "place_order", "broker", params,
-                                    side_effect="irreversible",
-                                    requires_approval=True)]
-        raise ValueError(f"no decomposition rule for goal type '{gtype}'")
+        gtype = intent["goal"]["type"]
+        planner = self.planners.get(gtype)
+        if planner is None:
+            raise ValueError(
+                f"no planner registered for goal type '{gtype}'. "
+                f"known: {self.planners.known()}"
+            )
+        tasks = planner(intent, self._make_task)
+        for task in tasks:  # planners build via _make_task, but re-validate to be safe
+            jsonschema.validate(task, self.schemas["task"])
+        return tasks
 
     def _make_task(self, intent: dict[str, Any], ttype: str, adapter: str,
                    inputs: dict[str, Any], side_effect: str = "read",
