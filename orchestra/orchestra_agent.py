@@ -83,6 +83,11 @@ class OrchestraAgent:
         if gtype == "launch_app":
             return [self._make_task(intent, "launch_app", "droidpuppy",
                                     params, side_effect="idempotent")]
+        if gtype == "place_order":
+            # irreversible + must be approved by a human before it can run
+            return [self._make_task(intent, "place_order", "broker", params,
+                                    side_effect="irreversible",
+                                    requires_approval=True)]
         raise ValueError(f"no decomposition rule for goal type '{gtype}'")
 
     def _make_task(self, intent: dict[str, Any], ttype: str, adapter: str,
@@ -103,6 +108,7 @@ class OrchestraAgent:
             "depends_on": depends or [],
             "idempotency_key": f"{intent['intent_id']}:{ttype}",
             "requires_approval": requires_approval,
+            "approved": False,
             "status": "pending",
             "attempts": 0,
         }
@@ -148,15 +154,70 @@ class OrchestraAgent:
             for task in ready:
                 self._run_task(intent_id, task)
 
+        # if anything is suspended for approval, do NOT emit a final Result -
+        # the intent is paused, not concluded.
+        tasks = self.k.get_tasks(intent_id)
+        awaiting = [t for t in tasks if t["status"] == "awaiting_approval"]
+        if awaiting:
+            self.k.set_intent_status(intent_id, "executing")
+            self._emit(intent_id, "progress",
+                       f"SUSPENDED: {len(awaiting)} task(s) awaiting your approval")
+            return {
+                "status": "awaiting_approval",
+                "intent_id": intent_id,
+                "pending_approvals": [
+                    {"task_id": t["task_id"], "type": t["type"],
+                     "side_effect_class": t["side_effect_class"],
+                     "inputs": t.get("inputs", {})}
+                    for t in awaiting
+                ],
+            }
         return self._finish(intent_id)
+
+    # ---- human-authority controls ----
+    def approve(self, intent_id: str, task_id: str,
+                approver: str = "conductor") -> dict[str, Any]:
+        """Authorize a suspended task and resume execution."""
+        task = self._find_task(intent_id, task_id)
+        if task["status"] != "awaiting_approval":
+            return {"status": "noop",
+                    "message": f"task is '{task['status']}', not awaiting approval"}
+        task["approved"] = True
+        task["status"] = "ready"
+        self.k.save_task(task)
+        self._emit(intent_id, "progress",
+                   f"task '{task['type']}' APPROVED by {approver} - resuming",
+                   task_id=task_id)
+        return self.run(intent_id)
+
+    def deny(self, intent_id: str, task_id: str, approver: str = "conductor",
+             reason: str = "") -> dict[str, Any]:
+        """Reject a suspended task; it is aborted and never runs."""
+        task = self._find_task(intent_id, task_id)
+        if task["status"] != "awaiting_approval":
+            return {"status": "noop",
+                    "message": f"task is '{task['status']}', not awaiting approval"}
+        task["status"] = "aborted"
+        self.k.save_task(task)
+        self._emit(intent_id, "log",
+                   f"task '{task['type']}' DENIED by {approver}: {reason}",
+                   task_id=task_id, severity="warn")
+        return self._finish(intent_id)
+
+    def _find_task(self, intent_id: str, task_id: str) -> dict[str, Any]:
+        for task in self.k.get_tasks(intent_id):
+            if task["task_id"] == task_id:
+                return task
+        raise ValueError(f"unknown task {task_id} for intent {intent_id}")
 
     def _run_task(self, intent_id: str, task: dict[str, Any]) -> None:
         # responsibility: human-authority gate
-        if task["requires_approval"]:
+        if task["requires_approval"] and not task.get("approved", False):
             task["status"] = "awaiting_approval"
             self.k.save_task(task)
             self._emit(intent_id, "approval_required",
-                       f"task '{task['type']}' needs approval before it can run",
+                       f"task '{task['type']}' is irreversible - needs approval "
+                       f"before it can run",
                        task_id=task["task_id"], severity="warn")
             return
 

@@ -108,6 +108,27 @@ class DroidPuppyAdapter:
         }
 
 
+class MockBrokerAdapter:
+    """Stand-in for an irreversible capability (placing a real broker order).
+
+    Marked conceptually irreversible: the Orchestra will gate it behind human
+    approval and will NOT auto-retry it on failure. This mock just records the
+    'order' and returns a fake order id - but it models the real danger class.
+    """
+
+    name = "broker"
+
+    def __init__(self) -> None:
+        self.orders: list[dict[str, Any]] = []
+
+    def run(self, task: dict[str, Any]) -> dict[str, Any]:
+        order = dict(task.get("inputs", {}))
+        order_id = f"ord-{len(self.orders) + 1:04d}"
+        self.orders.append({"order_id": order_id, **order})
+        return {"status": "succeeded",
+                "outputs": {"order_id": order_id, "order": order}}
+
+
 class Registry:
     def __init__(self) -> None:
         self._adapters: dict[str, Adapter] = {}

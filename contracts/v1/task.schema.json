@@ -49,6 +49,11 @@
       "description": "Dedupe key so resume-after-crash does not double-fire."
     },
     "requires_approval": { "type": "boolean", "default": false },
+    "approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set true only by an explicit human/authority approval. A task with requires_approval=true will not run until approved=true."
+    },
     "status": {
       "type": "string",
       "enum": ["pending", "ready", "running", "awaiting_approval", "succeeded", "failed", "compensated", "aborted"],
