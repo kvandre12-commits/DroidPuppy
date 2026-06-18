@@ -1,0 +1,92 @@
+{
+  "workflow_name": "section_gap_detection_and_routing_v1",
+  "industry": "retail",
+  "business_goal": "Detect empty shelf or section conditions early enough to trigger action, route them to the right people, and learn which recurring failures suggest process changes.",
+  "current_manual_flow": [
+    "A machine or worker captures photos during routine movement",
+    "Someone reviews the photos later or notices the issue in passing",
+    "The issue is described manually in chat, email, or a call",
+    "Another person figures out who owns that section",
+    "Someone follows up to confirm whether it was fixed",
+    "Later, leadership tries to reconstruct the pattern from memory"
+  ],
+  "pain_points": [
+    "empty sections are discovered too late",
+    "photo evidence exists but is not converted into fast action",
+    "the right owner is not obvious at alert time",
+    "repeated issues in the same area are hard to quantify",
+    "workers waste time translating images into messages",
+    "root causes get mixed together with one-off misses"
+  ],
+  "success_criteria": [
+    "flag likely empty sections shortly after capture",
+    "attach image, section, and timestamp context automatically",
+    "route alerts to the right role or person with minimal manual work",
+    "track acknowledgement and fix status",
+    "build a simple recurring-gap history by area and time window",
+    "surface workflow patterns that suggest staffing, replenishment, or planogram changes"
+  ],
+  "event_schema": {
+    "event_type": "section_gap_detected",
+    "required_fields": [
+      "store_id",
+      "section_id",
+      "captured_at",
+      "confidence",
+      "severity",
+      "image_ref",
+      "suspected_issue_type",
+      "owner_role_or_person"
+    ]
+  },
+  "suspected_issue_types": [
+    "replenishment_delay",
+    "inventory_mismatch",
+    "planogram_compliance_issue",
+    "stocking_execution_miss",
+    "unknown_needs_review"
+  ],
+  "intervention_points": [
+    {
+      "name": "capture_and_review_handoff",
+      "tools": [
+        "android_handoff_url",
+        "android_handoff_text",
+        "android_intent_send"
+      ]
+    },
+    {
+      "name": "operator_alert_packaging",
+      "tools": [
+        "android_handoff_text",
+        "android_support_share_wizard",
+        "android_intent_send"
+      ]
+    },
+    {
+      "name": "ui_fallback",
+      "tools": [
+        "android_ui_dump_hierarchy",
+        "android_ui_dump_find",
+        "android_ui_tap_match",
+        "android_input_text"
+      ]
+    },
+    {
+      "name": "support_and_audit_trail",
+      "tools": [
+        "android_support_bundle_collect",
+        "android_support_issue_draft",
+        "android_support_share_wizard"
+      ]
+    }
+  ],
+  "rollout_phases": [
+    "routing_map_and_data_model",
+    "evidence_to_alert_pilot",
+    "confirmation_loop",
+    "workflow_analytics"
+  ],
+  "support_posture": "Use human review for borderline detections, maintain a routing map, and require a visible fix-status loop.",
+  "status": "draft_v1"
+}

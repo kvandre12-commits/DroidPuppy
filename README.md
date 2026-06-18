@@ -89,6 +89,11 @@ For a fuller setup guide, see:
 - [`docs/PLUGIN_REFERENCE.md`](docs/PLUGIN_REFERENCE.md) — full auto-generated tool index
 - [`docs/DEVELOPER_TOOLS.md`](docs/DEVELOPER_TOOLS.md)
 
+For the portfolio and stewardship story, see:
+
+- [`docs/PORTFOLIO_KENNEL.md`](docs/PORTFOLIO_KENNEL.md)
+- [`docs/MIKE_PFAFFENBERGER_BRIEF.md`](docs/MIKE_PFAFFENBERGER_BRIEF.md)
+
 ## Highlights
 
 - Open Brave or Chrome from Termux
