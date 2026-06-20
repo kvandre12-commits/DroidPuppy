@@ -20,6 +20,7 @@ from eyes_review_gate_support import (
     emit_audit_event,
     ensure_layout,
     mint_execution_lease,
+    normalize_constraints,
     normalize_list,
     now_iso,
     read_json,
@@ -214,6 +215,11 @@ def decide_review(
     principal_id: str = DEFAULT_PRINCIPAL_ID,
     capabilities: list[str] | None = None,
     allowed_tools: list[str] | None = None,
+    allowed_paths: list[str] | None = None,
+    intent_actions: list[str] | None = None,
+    intent_packages: list[str] | None = None,
+    browser_packages: list[str] | None = None,
+    constraint_notes: str = "",
     lease_scope: str = DEFAULT_LEASE_SCOPE,
     max_uses: int = 1,
     max_tool_calls: int | None = None,
@@ -235,6 +241,13 @@ def decide_review(
         DEFAULT_LEASE_CAPABILITIES
     )
     resolved_tools = normalize_list(allowed_tools)
+    resolved_constraints = normalize_constraints(
+        allowed_paths=allowed_paths,
+        intent_actions=intent_actions,
+        intent_packages=intent_packages,
+        browser_packages=browser_packages,
+        notes=constraint_notes,
+    )
 
     paths = ensure_layout(root)
     pending_path = _resolve_pending_review_path(review_id, root=root)
@@ -275,6 +288,7 @@ def decide_review(
             principal_id=principal_id,
             capabilities=resolved_capabilities,
             allowed_tools=resolved_tools,
+            constraints=resolved_constraints,
             lease_scope=lease_scope,
             audit_event_ref=audit_event_path,
             lease_minutes=lease_minutes,
@@ -360,6 +374,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="Specific tool name to allow. Repeatable.",
     )
     parser.add_argument(
+        "--allow-path",
+        action="append",
+        dest="allowed_paths",
+        help="Approved filesystem path for path-locked leases. Repeatable.",
+    )
+    parser.add_argument(
+        "--intent-action",
+        action="append",
+        dest="intent_actions",
+        help="Approved Android intent action for intent-locked leases. Repeatable.",
+    )
+    parser.add_argument(
+        "--intent-package",
+        action="append",
+        dest="intent_packages",
+        help="Approved Android package for intent-locked leases. Repeatable.",
+    )
+    parser.add_argument(
+        "--browser-package",
+        action="append",
+        dest="browser_packages",
+        help="Approved browser package label like brave or chrome. Repeatable.",
+    )
+    parser.add_argument(
+        "--constraint-notes",
+        default="",
+        help="Human note preserved inside lease constraints.",
+    )
+    parser.add_argument(
         "--max-uses",
         type=int,
         default=1,
@@ -410,6 +453,11 @@ def main(argv: list[str] | None = None) -> int:
                         principal_id=args.principal_id,
                         capabilities=args.capabilities,
                         allowed_tools=args.allowed_tools,
+                        allowed_paths=args.allowed_paths,
+                        intent_actions=args.intent_actions,
+                        intent_packages=args.intent_packages,
+                        browser_packages=args.browser_packages,
+                        constraint_notes=args.constraint_notes,
                         lease_scope=args.lease_scope,
                         max_uses=args.max_uses,
                         max_tool_calls=args.max_tool_calls,
@@ -434,6 +482,11 @@ def main(argv: list[str] | None = None) -> int:
                         principal_id=args.principal_id,
                         capabilities=args.capabilities,
                         allowed_tools=args.allowed_tools,
+                        allowed_paths=args.allowed_paths,
+                        intent_actions=args.intent_actions,
+                        intent_packages=args.intent_packages,
+                        browser_packages=args.browser_packages,
+                        constraint_notes=args.constraint_notes,
                         lease_scope=args.lease_scope,
                         max_uses=args.max_uses,
                         max_tool_calls=args.max_tool_calls,

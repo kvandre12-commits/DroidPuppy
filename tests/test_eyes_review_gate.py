@@ -167,8 +167,10 @@ def test_audit_events_form_hash_chain_across_decision_and_mint(tmp_path):
     )
 
 
-def test_custom_capability_lease_arguments_are_preserved(tmp_path):
+def test_custom_capability_and_constraint_lease_arguments_are_preserved(tmp_path):
     pending, _ = _emit_pending_review(tmp_path)
+    approved_dir = tmp_path / "outputs" / "approved"
+    approved_dir.mkdir(parents=True, exist_ok=True)
 
     result = eyes_review_gate.decide_review(
         pending["review_id"],
@@ -177,6 +179,11 @@ def test_custom_capability_lease_arguments_are_preserved(tmp_path):
         principal_id="worker-alpha",
         capabilities=["shell.exec"],
         allowed_tools=["agent_run_shell_command"],
+        allowed_paths=[str(approved_dir)],
+        intent_actions=["android.intent.action.VIEW"],
+        intent_packages=["com.brave.browser"],
+        browser_packages=["BrAvE"],
+        constraint_notes="single exact workflow",
         max_uses=2,
         max_tool_calls=2,
         max_shell_commands=1,
@@ -187,6 +194,11 @@ def test_custom_capability_lease_arguments_are_preserved(tmp_path):
     assert lease["principal_id"] == "worker-alpha"
     assert lease["capabilities"] == ["shell.exec"]
     assert lease["allowed_tools"] == ["agent_run_shell_command"]
+    assert lease["constraints"]["allowed_paths"] == [str(approved_dir.resolve())]
+    assert lease["constraints"]["intent_actions"] == ["android.intent.action.VIEW"]
+    assert lease["constraints"]["intent_packages"] == ["com.brave.browser"]
+    assert lease["constraints"]["browser_packages"] == ["brave"]
+    assert lease["constraints"]["notes"] == "single exact workflow"
     assert lease["quotas"]["max_uses"] == 2
     assert lease["quotas"]["max_tool_calls"] == 2
     assert lease["quotas"]["max_shell_commands"] == 1
@@ -195,6 +207,8 @@ def test_custom_capability_lease_arguments_are_preserved(tmp_path):
 
 def test_main_approve_cli_returns_zero_and_accepts_lease_args(tmp_path):
     pending, _ = _emit_pending_review(tmp_path)
+    allowed_dir = tmp_path / "outputs" / "cli"
+    allowed_dir.mkdir(parents=True, exist_ok=True)
 
     list_code = eyes_review_gate.main(["--root", str(tmp_path), "--list-pending"])
     approve_code = eyes_review_gate.main(
@@ -213,11 +227,32 @@ def test_main_approve_cli_returns_zero_and_accepts_lease_args(tmp_path):
             "android.browser.open_url",
             "--allow-tool",
             "android_browser_open_url",
+            "--allow-path",
+            str(allowed_dir),
+            "--browser-package",
+            "chrome",
+            "--intent-action",
+            "android.intent.action.VIEW",
+            "--intent-package",
+            "com.android.chrome",
+            "--constraint-notes",
+            "cli constrained lease",
             "--max-uses",
             "1",
         ]
     )
 
+    approved_files = list((tmp_path / "review" / "approved").glob("*.json"))
+    lease_files = list((tmp_path / "leases" / "active").glob("*.json"))
+
     assert list_code == 0
     assert approve_code == 0
-    assert any((tmp_path / "review" / "approved").glob("*.json"))
+    assert approved_files
+    assert lease_files
+
+    lease = json.loads(lease_files[0].read_text())
+    assert lease["constraints"]["allowed_paths"] == [str(allowed_dir.resolve())]
+    assert lease["constraints"]["browser_packages"] == ["chrome"]
+    assert lease["constraints"]["intent_actions"] == ["android.intent.action.VIEW"]
+    assert lease["constraints"]["intent_packages"] == ["com.android.chrome"]
+    assert lease["constraints"]["notes"] == "cli constrained lease"

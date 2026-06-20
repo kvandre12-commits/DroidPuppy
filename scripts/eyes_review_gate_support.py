@@ -164,13 +164,53 @@ def emit_audit_event(
     return event_path
 
 
-def normalize_list(values: list[str] | None) -> list[str]:
+def normalize_list(values: list[str] | None, *, lower: bool = False) -> list[str]:
     cleaned: list[str] = []
     for value in values or []:
         text = str(value).strip()
-        if text and text not in cleaned:
+        if not text:
+            continue
+        if lower:
+            text = text.lower()
+        if text not in cleaned:
             cleaned.append(text)
     return cleaned
+
+
+def normalize_constraints(
+    *,
+    allowed_paths: list[str] | None = None,
+    intent_actions: list[str] | None = None,
+    intent_packages: list[str] | None = None,
+    browser_packages: list[str] | None = None,
+    notes: str = "",
+) -> dict[str, Any]:
+    constraints: dict[str, Any] = {}
+
+    normalized_paths = [
+        str(Path(value).expanduser().resolve())
+        for value in normalize_list(allowed_paths)
+    ]
+    if normalized_paths:
+        constraints["allowed_paths"] = normalized_paths
+
+    normalized_actions = normalize_list(intent_actions)
+    if normalized_actions:
+        constraints["intent_actions"] = normalized_actions
+
+    normalized_packages = normalize_list(intent_packages, lower=True)
+    if normalized_packages:
+        constraints["intent_packages"] = normalized_packages
+
+    normalized_browsers = normalize_list(browser_packages, lower=True)
+    if normalized_browsers:
+        constraints["browser_packages"] = normalized_browsers
+
+    note_text = str(notes).strip()
+    if note_text:
+        constraints["notes"] = note_text
+
+    return constraints
 
 
 def quota_payload(
@@ -201,6 +241,7 @@ def mint_execution_lease(
     principal_id: str,
     capabilities: list[str],
     allowed_tools: list[str],
+    constraints: dict[str, Any],
     lease_scope: str,
     audit_event_ref: Path,
     lease_minutes: int,
@@ -223,7 +264,7 @@ def mint_execution_lease(
         "lease_scope": lease_scope,
         "capabilities": capabilities,
         "allowed_tools": allowed_tools,
-        "constraints": {},
+        "constraints": constraints,
         "quotas": quota_payload(
             max_uses=max_uses,
             max_tool_calls=max_tool_calls,
@@ -257,6 +298,7 @@ def mint_execution_lease(
             "artifact_id": review["artifact_id"],
             "capabilities": capabilities,
             "allowed_tools": allowed_tools,
+            "constraints": constraints,
             "lease_ref": str(lease_path),
             "decision_event_ref": str(audit_event_ref),
             "quotas": lease["quotas"],
