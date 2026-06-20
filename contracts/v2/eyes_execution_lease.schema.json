@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v2/eyes_execution_lease.schema.json",
+  "title": "EyesExecutionLeaseV2",
+  "description": "Capability-scoped, principal-bound execution lease minted after explicit operator approval.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "2.0.0" },
+    "lease_id": { "type": "string" },
+    "review_id": { "type": "string" },
+    "result_id": { "type": "string" },
+    "artifact_id": { "type": "string" },
+    "worker_class": {
+      "type": "string",
+      "enum": [
+        "ocr_review",
+        "page_summary",
+        "document_digest",
+        "structured_review",
+        "text_summary",
+        "bill_review",
+        "school_digest",
+        "compare_candidate",
+        "manual_triage"
+      ]
+    },
+    "issued_by": { "type": "string" },
+    "principal_id": { "type": "string" },
+    "lease_scope": { "type": "string" },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "allowed_tools": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "allowed_paths": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "intent_actions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "intent_packages": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "browser_packages": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "quotas": {
+      "type": "object",
+      "properties": {
+        "max_uses": { "type": "integer", "minimum": 1 },
+        "remaining_uses": { "type": "integer", "minimum": 0 },
+        "max_tool_calls": { "type": ["integer", "null"], "minimum": 0 },
+        "max_shell_commands": { "type": ["integer", "null"], "minimum": 0 },
+        "max_token_spend": { "type": ["integer", "null"], "minimum": 0 },
+        "tool_calls_used": { "type": "integer", "minimum": 0 },
+        "shell_commands_used": { "type": "integer", "minimum": 0 },
+        "token_spend_used": { "type": "integer", "minimum": 0 }
+      },
+      "required": [
+        "max_uses",
+        "remaining_uses",
+        "max_tool_calls",
+        "max_shell_commands",
+        "max_token_spend",
+        "tool_calls_used",
+        "shell_commands_used",
+        "token_spend_used"
+      ],
+      "additionalProperties": false
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "used", "expired", "revoked"]
+    },
+    "decision_event_ref": { "type": "string" },
+    "minted_event_ref": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "not_before": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "last_used_at": { "type": ["string", "null"], "format": "date-time" },
+    "revoked_at": { "type": ["string", "null"], "format": "date-time" },
+    "revoked_by": { "type": ["string", "null"] },
+    "revocation_reason": { "type": ["string", "null"] }
+  },
+  "required": [
+    "contract_version",
+    "lease_id",
+    "review_id",
+    "result_id",
+    "artifact_id",
+    "worker_class",
+    "issued_by",
+    "principal_id",
+    "lease_scope",
+    "capabilities",
+    "allowed_tools",
+    "constraints",
+    "quotas",
+    "status",
+    "decision_event_ref",
+    "minted_event_ref",
+    "created_at",
+    "not_before",
+    "expires_at",
+    "last_used_at",
+    "revoked_at",
+    "revoked_by",
+    "revocation_reason"
+  ],
+  "additionalProperties": false
+}

@@ -4,109 +4,32 @@
 from __future__ import annotations
 
 import argparse
-import datetime as dt
-import hashlib
 import json
 import shlex
 import shutil
 import subprocess
-import time
-import uuid
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import jsonschema
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
-CONTRACTS_DIR = REPO_ROOT / "contracts" / "v1"
-DEFAULT_ROOT = Path.home() / ".project_os" / "eyes"
-DEFAULT_LEASE_MINUTES = 15
-
-
-@dataclass(frozen=True)
-class ReviewPaths:
-    root: Path
-    review_dir: Path
-    review_pending: Path
-    review_approved: Path
-    review_rejected: Path
-    latest_review: Path
-    leases_dir: Path
-    leases_active: Path
-    audit_dir: Path
-    audit_events: Path
-
-
-def _now() -> str:
-    return dt.datetime.now(dt.timezone.utc).isoformat()
-
-
-def _uid(prefix: str) -> str:
-    return f"{prefix}-{uuid.uuid4().hex[:10]}"
-
-
-def _canonical_json(payload: dict[str, Any]) -> str:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
-
-
-def _sha256_text(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def resolve_paths(root: str | Path | None = None) -> ReviewPaths:
-    base = Path(root).expanduser().resolve() if root else DEFAULT_ROOT
-    review_dir = base / "review"
-    return ReviewPaths(
-        root=base,
-        review_dir=review_dir,
-        review_pending=review_dir / "pending",
-        review_approved=review_dir / "approved",
-        review_rejected=review_dir / "rejected",
-        latest_review=review_dir / "review_required.json",
-        leases_dir=base / "leases",
-        leases_active=base / "leases" / "active",
-        audit_dir=base / "audit",
-        audit_events=base / "audit" / "events",
-    )
-
-
-def ensure_layout(root: str | Path | None = None) -> ReviewPaths:
-    paths = resolve_paths(root)
-    for path in (
-        paths.root,
-        paths.review_dir,
-        paths.review_pending,
-        paths.review_approved,
-        paths.review_rejected,
-        paths.leases_dir,
-        paths.leases_active,
-        paths.audit_dir,
-        paths.audit_events,
-    ):
-        path.mkdir(parents=True, exist_ok=True)
-    return paths
-
-
-def _load_schema(name: str) -> dict[str, Any]:
-    return json.loads((CONTRACTS_DIR / name).read_text())
-
-
-def _validate(payload: dict[str, Any], schema_name: str) -> None:
-    jsonschema.validate(payload, _load_schema(schema_name))
-
-
-def _read_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text())
-
-
-def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
-
-
-def _write_json_new(path: Path, payload: dict[str, Any]) -> None:
-    with path.open("x", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+from eyes_review_gate_support import (
+    DEFAULT_LEASE_CAPABILITIES,
+    DEFAULT_LEASE_MINUTES,
+    DEFAULT_LEASE_SCOPE,
+    DEFAULT_PRINCIPAL_ID,
+    canonical_json,
+    emit_audit_event,
+    ensure_layout,
+    mint_execution_lease,
+    normalize_list,
+    now_iso,
+    read_json,
+    resolve_paths,
+    sha256_text,
+    uid,
+    validate,
+    write_json,
+    write_json_new,
+)
 
 
 def _run_command(args: list[str], timeout: int = 20) -> dict[str, Any]:
@@ -208,7 +131,7 @@ def emit_review_required(
     notify: bool = True,
 ) -> dict[str, Any]:
     paths = ensure_layout(root)
-    review_id = _uid("review")
+    review_id = uid("review")
     review_path = paths.review_pending / f"{review_id}.json"
     review = {
         "contract_version": "1.0.0",
@@ -229,19 +152,17 @@ def emit_review_required(
         "status": "pending",
         "source_artifact_path": result.get("source_artifact_path"),
         "open_target": str(review_path),
-        "created_at": _now(),
+        "created_at": now_iso(),
         "decided_at": None,
         "decided_by": None,
         "decision_reason": None,
         "audit_event_ref": None,
         "lease_ref": None,
     }
-    _validate(review, "eyes_review_required.schema.json")
-    _write_json(review_path, review)
-    _write_json(paths.latest_review, review)
-    notification = None
-    if notify:
-        notification = _send_notification(review, review_path)
+    validate(review, "eyes_review_required.schema.json")
+    write_json(review_path, review)
+    write_json(paths.latest_review, review)
+    notification = _send_notification(review, review_path) if notify else None
     return {
         "review_ref": str(review_path),
         "latest_review_ref": str(paths.latest_review),
@@ -249,98 +170,27 @@ def emit_review_required(
     }
 
 
-def _resolve_pending_review_path(paths: ReviewPaths, review_id: str) -> Path:
+def _resolve_pending_review_path(
+    review_id: str, *, root: str | Path | None = None
+) -> Path:
+    paths = resolve_paths(root)
     normalized = Path(review_id).stem
     direct = paths.review_pending / f"{normalized}.json"
     if direct.is_file():
         return direct
     for candidate in paths.review_pending.glob("*.json"):
-        payload = _read_json(candidate)
+        payload = read_json(candidate)
         if str(payload.get("review_id", "")) == normalized:
             return candidate
     raise FileNotFoundError(f"Pending review not found: {review_id}")
-
-
-def _previous_event_sha(paths: ReviewPaths) -> str | None:
-    events = sorted(paths.audit_events.glob("*.json"))
-    if not events:
-        return None
-    latest = _read_json(events[-1])
-    value = latest.get("event_sha256")
-    return str(value) if value else None
-
-
-def _emit_audit_event(
-    paths: ReviewPaths,
-    review_snapshot: dict[str, Any],
-    review_ref: Path,
-    *,
-    decision: str,
-    decided_by: str,
-    reason: str,
-) -> Path:
-    timestamp_ns = time.time_ns()
-    event_core = {
-        "contract_version": "1.0.0",
-        "event_id": _uid("audit"),
-        "event_type": "review_decision",
-        "decision": decision,
-        "review_ref": str(review_ref),
-        "review_sha256": _sha256_text(_canonical_json(review_snapshot)),
-        "review_artifact": review_snapshot,
-        "decided_by": decided_by,
-        "decision_reason": reason,
-        "timestamp": _now(),
-        "timestamp_ns": timestamp_ns,
-        "previous_event_sha256": _previous_event_sha(paths),
-    }
-    event_hash = _sha256_text(_canonical_json(event_core))
-    event = dict(event_core)
-    event["event_sha256"] = event_hash
-    _validate(event, "eyes_audit_event.schema.json")
-    event_path = paths.audit_events / f"{timestamp_ns}_{event['event_id']}.json"
-    _write_json_new(event_path, event)
-    return event_path
-
-
-def _mint_execution_lease(
-    paths: ReviewPaths,
-    review: dict[str, Any],
-    *,
-    decided_by: str,
-    audit_event_ref: Path,
-    lease_minutes: int,
-) -> Path:
-    created_at = dt.datetime.now(dt.timezone.utc)
-    expires_at = created_at + dt.timedelta(minutes=lease_minutes)
-    lease = {
-        "contract_version": "1.0.0",
-        "lease_id": _uid("lease"),
-        "review_id": str(review["review_id"]),
-        "result_id": str(review["result_id"]),
-        "artifact_id": str(review["artifact_id"]),
-        "worker_class": str(review["worker_class"]),
-        "issued_by": decided_by,
-        "lease_scope": "single_harmless_action",
-        "max_uses": 1,
-        "remaining_uses": 1,
-        "status": "active",
-        "decision_event_ref": str(audit_event_ref),
-        "created_at": created_at.isoformat(),
-        "expires_at": expires_at.isoformat(),
-    }
-    _validate(lease, "eyes_execution_lease.schema.json")
-    lease_path = paths.leases_active / f"{lease['lease_id']}.json"
-    _write_json_new(lease_path, lease)
-    return lease_path
 
 
 def list_pending_reviews(root: str | Path | None = None) -> list[dict[str, Any]]:
     paths = ensure_layout(root)
     reviews: list[dict[str, Any]] = []
     for path in sorted(paths.review_pending.glob("*.json")):
-        payload = _read_json(path)
-        _validate(payload, "eyes_review_required.schema.json")
+        payload = read_json(path)
+        validate(payload, "eyes_review_required.schema.json")
         reviews.append(
             {
                 "review_id": payload["review_id"],
@@ -361,39 +211,77 @@ def decide_review(
     decided_by: str = "operator",
     reason: str = "",
     lease_minutes: int = DEFAULT_LEASE_MINUTES,
+    principal_id: str = DEFAULT_PRINCIPAL_ID,
+    capabilities: list[str] | None = None,
+    allowed_tools: list[str] | None = None,
+    lease_scope: str = DEFAULT_LEASE_SCOPE,
+    max_uses: int = 1,
+    max_tool_calls: int | None = None,
+    max_shell_commands: int | None = None,
+    max_token_spend: int | None = None,
 ) -> dict[str, Any]:
     if lease_minutes < 1:
         raise ValueError("lease_minutes must be at least 1")
+    if max_uses < 1:
+        raise ValueError("max_uses must be at least 1")
+    if max_tool_calls is not None and max_tool_calls < 0:
+        raise ValueError("max_tool_calls cannot be negative")
+    if max_shell_commands is not None and max_shell_commands < 0:
+        raise ValueError("max_shell_commands cannot be negative")
+    if max_token_spend is not None and max_token_spend < 0:
+        raise ValueError("max_token_spend cannot be negative")
+
+    resolved_capabilities = normalize_list(capabilities) or list(
+        DEFAULT_LEASE_CAPABILITIES
+    )
+    resolved_tools = normalize_list(allowed_tools)
+
     paths = ensure_layout(root)
-    pending_path = _resolve_pending_review_path(paths, review_id)
-    original_review = _read_json(pending_path)
-    _validate(original_review, "eyes_review_required.schema.json")
+    pending_path = _resolve_pending_review_path(review_id, root=root)
+    original_review = read_json(pending_path)
+    validate(original_review, "eyes_review_required.schema.json")
 
     decision = "APPROVED" if approve else "REJECTED"
-    audit_event_path = _emit_audit_event(
+    audit_event_path = emit_audit_event(
         paths,
-        original_review,
-        pending_path,
-        decision=decision,
-        decided_by=decided_by,
+        event_type="review_decision",
+        principal_id=principal_id,
+        outcome=decision,
         reason=reason,
+        details={
+            "review_ref": str(pending_path),
+            "review_sha256": sha256_text(canonical_json(original_review)),
+            "review_artifact": original_review,
+            "decision": decision,
+            "decided_by": decided_by,
+            "decision_reason": reason,
+        },
     )
 
     updated_review = dict(original_review)
     updated_review["status"] = "approved" if approve else "rejected"
-    updated_review["decided_at"] = _now()
+    updated_review["decided_at"] = now_iso()
     updated_review["decided_by"] = decided_by
     updated_review["decision_reason"] = reason
     updated_review["audit_event_ref"] = str(audit_event_path)
 
     lease_path = None
+    lease_audit_event_path = None
     if approve:
-        lease_path = _mint_execution_lease(
+        lease_path, lease_audit_event_path = mint_execution_lease(
             paths,
             updated_review,
             decided_by=decided_by,
+            principal_id=principal_id,
+            capabilities=resolved_capabilities,
+            allowed_tools=resolved_tools,
+            lease_scope=lease_scope,
             audit_event_ref=audit_event_path,
             lease_minutes=lease_minutes,
+            max_uses=max_uses,
+            max_tool_calls=max_tool_calls,
+            max_shell_commands=max_shell_commands,
+            max_token_spend=max_token_spend,
         )
         updated_review["lease_ref"] = str(lease_path)
         destination = paths.review_approved / pending_path.name
@@ -402,10 +290,10 @@ def decide_review(
         destination = paths.review_rejected / pending_path.name
 
     updated_review["open_target"] = str(destination)
-    _validate(updated_review, "eyes_review_required.schema.json")
-    _write_json_new(destination, updated_review)
+    validate(updated_review, "eyes_review_required.schema.json")
+    write_json_new(destination, updated_review)
     pending_path.unlink()
-    _write_json(paths.latest_review, updated_review)
+    write_json(paths.latest_review, updated_review)
 
     return {
         "success": True,
@@ -413,6 +301,9 @@ def decide_review(
         "review_ref": str(destination),
         "audit_event_ref": str(audit_event_path),
         "lease_ref": str(lease_path) if lease_path else None,
+        "lease_audit_event_ref": (
+            str(lease_audit_event_path) if lease_audit_event_path else None
+        ),
     }
 
 
@@ -446,6 +337,52 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_LEASE_MINUTES,
         help="Lease lifetime in minutes for approvals (default: 15).",
     )
+    parser.add_argument(
+        "--principal-id",
+        default=DEFAULT_PRINCIPAL_ID,
+        help="Principal id to bind into the minted lease.",
+    )
+    parser.add_argument(
+        "--lease-scope",
+        default=DEFAULT_LEASE_SCOPE,
+        help="Lease scope label preserved for backward compatibility and operator readability.",
+    )
+    parser.add_argument(
+        "--capability",
+        action="append",
+        dest="capabilities",
+        help="Capability to grant. Repeatable. Defaults to harmless Android launch capabilities when omitted.",
+    )
+    parser.add_argument(
+        "--allow-tool",
+        action="append",
+        dest="allowed_tools",
+        help="Specific tool name to allow. Repeatable.",
+    )
+    parser.add_argument(
+        "--max-uses",
+        type=int,
+        default=1,
+        help="Single lease use budget (default: 1).",
+    )
+    parser.add_argument(
+        "--max-tool-calls",
+        type=int,
+        default=None,
+        help="Optional maximum successful tool calls before the lease self-destructs.",
+    )
+    parser.add_argument(
+        "--max-shell-commands",
+        type=int,
+        default=None,
+        help="Optional maximum shell.exec uses before the lease self-destructs.",
+    )
+    parser.add_argument(
+        "--max-token-spend",
+        type=int,
+        default=None,
+        help="Optional token-spend budget placeholder for future runtime accounting.",
+    )
     return parser
 
 
@@ -470,6 +407,14 @@ def main(argv: list[str] | None = None) -> int:
                         decided_by=args.decided_by,
                         reason=args.reason,
                         lease_minutes=args.lease_minutes,
+                        principal_id=args.principal_id,
+                        capabilities=args.capabilities,
+                        allowed_tools=args.allowed_tools,
+                        lease_scope=args.lease_scope,
+                        max_uses=args.max_uses,
+                        max_tool_calls=args.max_tool_calls,
+                        max_shell_commands=args.max_shell_commands,
+                        max_token_spend=args.max_token_spend,
                     ),
                     indent=2,
                     sort_keys=True,
@@ -486,6 +431,14 @@ def main(argv: list[str] | None = None) -> int:
                         decided_by=args.decided_by,
                         reason=args.reason,
                         lease_minutes=args.lease_minutes,
+                        principal_id=args.principal_id,
+                        capabilities=args.capabilities,
+                        allowed_tools=args.allowed_tools,
+                        lease_scope=args.lease_scope,
+                        max_uses=args.max_uses,
+                        max_tool_calls=args.max_tool_calls,
+                        max_shell_commands=args.max_shell_commands,
+                        max_token_spend=args.max_token_spend,
                     ),
                     indent=2,
                     sort_keys=True,

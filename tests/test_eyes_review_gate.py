@@ -86,7 +86,7 @@ def test_emit_review_required_posts_notification_when_available(tmp_path, monkey
     assert "/usr/bin/termux-open" in notification["tap_action"]
 
 
-def test_approve_moves_review_mints_lease_and_audit_event(tmp_path):
+def test_approve_moves_review_mints_v2_lease_and_audit_events(tmp_path):
     pending, _ = _emit_pending_review(tmp_path)
 
     result = eyes_review_gate.decide_review(
@@ -99,18 +99,29 @@ def test_approve_moves_review_mints_lease_and_audit_event(tmp_path):
     )
 
     approved = json.loads(pathlib.Path(result["review_ref"]).read_text())
-    audit = json.loads(pathlib.Path(result["audit_event_ref"]).read_text())
+    decision_audit = json.loads(pathlib.Path(result["audit_event_ref"]).read_text())
+    lease_audit = json.loads(pathlib.Path(result["lease_audit_event_ref"]).read_text())
     lease = json.loads(pathlib.Path(result["lease_ref"]).read_text())
 
     assert approved["status"] == "approved"
     assert approved["decided_by"] == "butcher"
     assert approved["decision_reason"] == "Looks safe."
     assert not any((tmp_path / "review" / "pending").glob("*.json"))
-    assert audit["decision"] == "APPROVED"
-    assert audit["review_artifact"]["status"] == "pending"
+
+    assert decision_audit["event_type"] == "review_decision"
+    assert decision_audit["details"]["decision"] == "APPROVED"
+    assert decision_audit["details"]["review_artifact"]["status"] == "pending"
+
+    assert lease_audit["event_type"] == "lease_minted"
+    assert lease_audit["previous_event_sha256"] == decision_audit["event_sha256"]
+
+    assert lease["contract_version"] == "2.0.0"
     assert lease["status"] == "active"
-    assert lease["remaining_uses"] == 1
+    assert lease["principal_id"] == eyes_review_gate.DEFAULT_PRINCIPAL_ID
+    assert lease["capabilities"] == eyes_review_gate.DEFAULT_LEASE_CAPABILITIES
+    assert lease["quotas"]["remaining_uses"] == 1
     assert lease["decision_event_ref"] == result["audit_event_ref"]
+    assert lease["minted_event_ref"] == result["lease_audit_event_ref"]
 
 
 def test_reject_moves_review_and_stamps_audit_without_lease(tmp_path):
@@ -130,11 +141,13 @@ def test_reject_moves_review_and_stamps_audit_without_lease(tmp_path):
     assert rejected["status"] == "rejected"
     assert rejected["lease_ref"] is None
     assert result["lease_ref"] is None
-    assert audit["decision"] == "REJECTED"
+    assert result["lease_audit_event_ref"] is None
+    assert audit["event_type"] == "review_decision"
+    assert audit["details"]["decision"] == "REJECTED"
     assert not any((tmp_path / "leases" / "active").glob("*.json"))
 
 
-def test_audit_events_form_hash_chain(tmp_path):
+def test_audit_events_form_hash_chain_across_decision_and_mint(tmp_path):
     first, _ = _emit_pending_review(tmp_path)
     eyes_review_gate.decide_review(first["review_id"], approve=True, root=tmp_path)
 
@@ -144,17 +157,43 @@ def test_audit_events_form_hash_chain(tmp_path):
     )
 
     audit_files = sorted((tmp_path / "audit" / "events").glob("*.json"))
-    first_event = json.loads(audit_files[0].read_text())
-    second_event = json.loads(audit_files[1].read_text())
-
-    assert second_event["previous_event_sha256"] == first_event["event_sha256"]
+    events = [json.loads(path.read_text()) for path in audit_files]
+    assert len(events) == 3
+    for previous, current in zip(events, events[1:]):
+        assert current["previous_event_sha256"] == previous["event_sha256"]
     assert (
         json.loads(pathlib.Path(result["audit_event_ref"]).read_text())["event_id"]
-        == second_event["event_id"]
+        == events[-1]["event_id"]
     )
 
 
-def test_main_approve_cli_returns_zero_and_lists_pending(tmp_path):
+def test_custom_capability_lease_arguments_are_preserved(tmp_path):
+    pending, _ = _emit_pending_review(tmp_path)
+
+    result = eyes_review_gate.decide_review(
+        pending["review_id"],
+        approve=True,
+        root=tmp_path,
+        principal_id="worker-alpha",
+        capabilities=["shell.exec"],
+        allowed_tools=["agent_run_shell_command"],
+        max_uses=2,
+        max_tool_calls=2,
+        max_shell_commands=1,
+        max_token_spend=50000,
+    )
+
+    lease = json.loads(pathlib.Path(result["lease_ref"]).read_text())
+    assert lease["principal_id"] == "worker-alpha"
+    assert lease["capabilities"] == ["shell.exec"]
+    assert lease["allowed_tools"] == ["agent_run_shell_command"]
+    assert lease["quotas"]["max_uses"] == 2
+    assert lease["quotas"]["max_tool_calls"] == 2
+    assert lease["quotas"]["max_shell_commands"] == 1
+    assert lease["quotas"]["max_token_spend"] == 50000
+
+
+def test_main_approve_cli_returns_zero_and_accepts_lease_args(tmp_path):
     pending, _ = _emit_pending_review(tmp_path)
 
     list_code = eyes_review_gate.main(["--root", str(tmp_path), "--list-pending"])
@@ -168,6 +207,14 @@ def test_main_approve_cli_returns_zero_and_lists_pending(tmp_path):
             "butcher",
             "--reason",
             "ship it",
+            "--principal-id",
+            "worker-beta",
+            "--capability",
+            "android.browser.open_url",
+            "--allow-tool",
+            "android_browser_open_url",
+            "--max-uses",
+            "1",
         ]
     )
 
