@@ -2,5 +2,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ruff_cache/
+.coverage
 outputs/
 .DS_Store
