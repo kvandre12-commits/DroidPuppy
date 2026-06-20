@@ -89,10 +89,11 @@ This project is meant to show that I can:
 
 1. Read `README.md`.
 2. Read `docs/PORTFOLIO_KENNEL.md`.
-3. Read `docs/ORCHESTRA_AGENT.md` and `docs/ARCHITECTURE_REVIEW.md`.
-4. Review `contracts/v1/`.
-5. Run the demos in `orchestra/README.md`.
-6. Inspect the Code Puppy branch commits for focused engine fixes.
+3. Read `docs/PROJECT_OS_BRIEF.md`.
+4. Read `docs/ORCHESTRA_AGENT.md` and `docs/ARCHITECTURE_REVIEW.md`.
+5. Review `contracts/v1/`.
+6. Run the demos in `orchestra/README.md`.
+7. Inspect the Code Puppy branch commits for focused engine fixes.
 
 ## Near-term roadmap
 
@@ -103,6 +104,7 @@ The next useful milestones are:
 3. CI or local scripts for schema validation and demo smoke tests
 4. screenshots or terminal transcripts proving the Android workflows
 5. clearer packaging/install instructions for Code Puppy users
+6. upstream lean-install fixes so users can install Code Puppy, add the DroidPuppy overlay, and use it on Android the same day
 
 ## Closing statement
 
