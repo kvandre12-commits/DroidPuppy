@@ -2,27 +2,71 @@
 
 ## Goal
 
-DroidPuppy is meant to be copied into a Code Puppy checkout as a plugin overlay.
+DroidPuppy is meant to layer on top of **Mike's upstream Code Puppy install**
+without editing site-packages or mutating the upstream checkout.
+
+The preferred install target is Code Puppy's **user plugin tier**:
+
+```text
+~/.code_puppy/plugins/
+```
+
+That works whether Code Puppy came from `uvx`, `pip`, or a git checkout.
 
 ## Basic install
 
-Copy the plugin directories from this repo into:
+1. Install Code Puppy from upstream.
+2. Clone this repo.
+3. Run:
 
-```text
-code_puppy/plugins/
+```bash
+python scripts/install_overlay.py
 ```
 
-inside your Code Puppy repo.
+That copies every DroidPuppy plugin in this repo into:
 
-The included plugin folders are:
+```text
+~/.code_puppy/plugins/
+```
 
-- `android_brave_bridge`
-- `android_cdp_bridge`
-- `android_cdp_client`
-- `android_browser_easy`
-- `android_browser_actions`
-- `android_utility_kit`
-- `android_friendly_router`
+### Project-local install
+
+If you want the overlay only for one checkout:
+
+```bash
+python scripts/install_overlay.py --project-dir /path/to/project
+```
+
+That installs into:
+
+```text
+/path/to/project/.code_puppy/plugins/
+```
+
+### Development / live-edit install
+
+If you're actively working on DroidPuppy itself, symlink the plugins instead of
+copying them:
+
+```bash
+python scripts/install_overlay.py --mode symlink --overwrite
+```
+
+### Plugin inventory
+
+List the available plugins without installing them:
+
+```bash
+python scripts/install_overlay.py --list
+```
+
+The full plugin/tool catalog lives in [`PLUGIN_REFERENCE.md`](PLUGIN_REFERENCE.md).
+
+### Verify the stack after install
+
+Start Code Puppy, then run the DroidPuppy doctor tool to check platform,
+Android commands, browser availability, optional ADB/CDP readiness, and plugin
+inventory.
 
 ## Termux notes
 

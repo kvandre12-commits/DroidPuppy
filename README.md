@@ -73,14 +73,33 @@ next steps.
 
 ## Quick start
 
-1. Clone or copy this repo.
-2. Copy the plugin folders into a Code Puppy checkout under:
+1. Install Code Puppy from Mike's upstream however you like (`uvx`, `pip`, or a git checkout).
+2. Clone this repo.
+3. Install the overlay into Code Puppy's user plugin tier:
 
-```text
-code_puppy/plugins/
+```bash
+python scripts/install_overlay.py
 ```
 
-3. Start using the Android-focused tools from Code Puppy.
+That installs the DroidPuppy plugins into:
+
+```text
+~/.code_puppy/plugins/
+```
+
+So your upstream Code Puppy install picks them up automatically on startup.
+
+For repo-local installs instead, target a project checkout:
+
+```bash
+python scripts/install_overlay.py --project-dir /path/to/project
+```
+
+For development, you can symlink instead of copy:
+
+```bash
+python scripts/install_overlay.py --mode symlink --overwrite
+```
 
 For a fuller setup guide, see:
 
