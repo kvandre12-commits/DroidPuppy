@@ -23,6 +23,8 @@ from typing import Any
 
 import jsonschema
 
+import eyes_review_gate
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONTRACTS_DIR = REPO_ROOT / "contracts" / "v1"
 DEFAULT_ROOT = Path.home() / ".project_os" / "eyes"
@@ -55,6 +57,9 @@ class WorkerPaths:
     queue_completed: Path
     queue_failed: Path
     results: Path
+    review_dir: Path
+    review_pending: Path
+    latest_review: Path
     processed: Path
     failed: Path
 
@@ -66,6 +71,7 @@ class WorkerRunSummary:
     failed: int
     idle: bool
     result_refs: list[str]
+    review_refs: list[str]
 
 
 def _now() -> str:
@@ -86,6 +92,9 @@ def resolve_paths(root: str | Path | None = None) -> WorkerPaths:
         queue_completed=base / "queue" / "completed",
         queue_failed=base / "queue" / "failed",
         results=base / "results",
+        review_dir=base / "review",
+        review_pending=(base / "review" / "pending"),
+        latest_review=(base / "review" / "review_required.json"),
         processed=base / "processed",
         failed=base / "failed",
     )
@@ -101,6 +110,8 @@ def ensure_layout(root: str | Path | None = None) -> WorkerPaths:
         paths.queue_completed,
         paths.queue_failed,
         paths.results,
+        paths.review_dir,
+        paths.review_pending,
         paths.processed,
         paths.failed,
     ):
@@ -309,13 +320,17 @@ def _fail_item(
 
 
 def run_batch(
-    root: str | Path | None = None, *, max_items: int = 1
+    root: str | Path | None = None,
+    *,
+    max_items: int = 1,
+    notify_reviews: bool = True,
 ) -> WorkerRunSummary:
     if max_items < 1:
         raise ValueError("max_items must be at least 1")
     paths = ensure_layout(root)
     processed = completed = failed = 0
     result_refs: list[str] = []
+    review_refs: list[str] = []
 
     for pending_path, payload in _pending_items(paths)[:max_items]:
         processed += 1
@@ -324,9 +339,16 @@ def run_batch(
             manifest = _read_json(_manifest_path_for(claimed_payload))
             _validate(manifest, "eyes_artifact.schema.json")
             result = _build_result(claimed_payload, manifest)
-            result_refs.append(
-                _complete_item(paths, claimed_path, claimed_payload, result)
-            )
+            result_path = _complete_item(paths, claimed_path, claimed_payload, result)
+            result_refs.append(result_path)
+            if result.get("requires_human_review"):
+                review_info = eyes_review_gate.emit_review_required(
+                    result,
+                    result_path,
+                    root=paths.root,
+                    notify=notify_reviews,
+                )
+                review_refs.append(str(review_info["review_ref"]))
             completed += 1
         except Exception as exc:  # noqa: BLE001
             _fail_item(paths, claimed_path, claimed_payload, exc)
@@ -338,6 +360,7 @@ def run_batch(
         failed=failed,
         idle=processed == 0,
         result_refs=result_refs,
+        review_refs=review_refs,
     )
 
 
@@ -350,6 +373,10 @@ def status_snapshot(root: str | Path | None = None) -> dict[str, int | str]:
         "queue_completed": len(list(paths.queue_completed.glob("*.json"))),
         "queue_failed": len(list(paths.queue_failed.glob("*.json"))),
         "results": len(list(paths.results.glob("*.json"))),
+        "review_pending": len(list(paths.review_pending.glob("*.json"))),
+        "latest_review": str(paths.latest_review)
+        if paths.latest_review.exists()
+        else "",
     }
 
 
@@ -365,11 +392,21 @@ def build_parser() -> argparse.ArgumentParser:
 
     run_once = subparsers.add_parser("run-once", help="Process at most one queue item.")
     run_once.add_argument("--max-items", type=int, default=1)
+    run_once.add_argument(
+        "--no-notify",
+        action="store_true",
+        help="Create review-required artifacts without posting local notifications.",
+    )
 
     run_batch_parser = subparsers.add_parser(
         "run-batch", help="Process up to max-items queue items and exit."
     )
     run_batch_parser.add_argument("--max-items", type=int, default=3)
+    run_batch_parser.add_argument(
+        "--no-notify",
+        action="store_true",
+        help="Create review-required artifacts without posting local notifications.",
+    )
     return parser
 
 
@@ -387,7 +424,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command in {"run-once", "run-batch"}:
-        summary = run_batch(args.root, max_items=args.max_items)
+        summary = run_batch(
+            args.root,
+            max_items=args.max_items,
+            notify_reviews=not args.no_notify,
+        )
         print(
             json.dumps(
                 {
@@ -396,6 +437,7 @@ def main(argv: list[str] | None = None) -> int:
                     "failed": summary.failed,
                     "idle": summary.idle,
                     "result_refs": summary.result_refs,
+                    "review_refs": summary.review_refs,
                 },
                 indent=2,
                 sort_keys=True,

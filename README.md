@@ -130,7 +130,7 @@ For the portfolio and stewardship story, see:
 - Read page text, links, and HTML without raw CDP knowledge
 - Click links, fill inputs, and capture screenshots
 - Drop text, URLs, and files into a local eyes inbox for later background processing
-- Run one-shot eyes workers and schedule lightweight Termux wakeups for headless processing
+- Run one-shot eyes workers, emit review-required artifacts, and schedule lightweight Termux wakeups for headless processing
 
 ## Notes
 

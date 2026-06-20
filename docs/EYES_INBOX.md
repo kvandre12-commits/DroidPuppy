@@ -58,6 +58,8 @@ queue/claimed/    queue items temporarily claimed by a worker
 queue/completed/  queue items that produced a result
 queue/failed/     queue items that failed during worker execution
 results/          validated EyesWorkerResult JSON
+review/pending/   review-required artifacts waiting for a human
+review/review_required.json  latest human-review gate artifact
 processed/        files successfully ingested
 failed/           duplicate markers or error records
 jobs/             generated Termux scheduler wrapper scripts
@@ -141,8 +143,9 @@ Current routing is deliberately simple:
 This is enough to organize the pool before we teach more workers how to swim.
 
 The current worker slice stays deterministic and bounded: it produces typed
-result artifacts, updates queue status, and exits instead of clinging to life in
-a background loop until Android strangles it.
+result artifacts, updates queue status, emits a minimal `review_required` gate
+artifact when human review is needed, and exits instead of clinging to life in a
+background loop until Android strangles it.
 
 ## Why this matters
 
@@ -152,3 +155,20 @@ The operator can use human-native access to surface evidence once, and the pack
 can then work locally from the inbox forward.
 
 That is the native advantage.
+
+## Minimum governance loop now present
+
+For review-requiring artifacts, the smallest closed loop is now:
+
+```text
+termux-job-scheduler
+-> eyes_tick.py
+-> eyes_queue_worker.py
+-> review/pending/<id>.json
+-> review/review_required.json
+-> termux-notification
+-> operator reviews
+```
+
+No dashboard. No daemon. No fake approval empire. Just enough to prove the
+human gate belongs between recommendation and action.

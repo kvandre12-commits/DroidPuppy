@@ -150,6 +150,7 @@ This repo now has the first direct implementation of that shape in the eyes
 lane:
 
 - `scripts/eyes_queue_worker.py` = one-shot worker
+- `scripts/eyes_review_gate.py` = minimal review artifact + notification gate
 - `scripts/eyes_tick.py` = one-shot scan + consume scheduler target
 - `android_eyes_worker_kit` = Android/agent-facing wrapper around run/schedule/list/cancel
 

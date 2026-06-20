@@ -29,6 +29,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Do not run inbox scan before consuming queue items.",
     )
+    parser.add_argument(
+        "--no-notify",
+        action="store_true",
+        help="Create review artifacts without posting local notifications.",
+    )
     return parser
 
 
@@ -38,7 +43,11 @@ def main(argv: list[str] | None = None) -> int:
     scan_summary = None
     if not args.skip_scan:
         scan_summary = eyes_inbox.scan_inbox(args.root)
-    worker_summary = eyes_queue_worker.run_batch(args.root, max_items=args.max_items)
+    worker_summary = eyes_queue_worker.run_batch(
+        args.root,
+        max_items=args.max_items,
+        notify_reviews=not args.no_notify,
+    )
     print(
         json.dumps(
             {
@@ -59,6 +68,7 @@ def main(argv: list[str] | None = None) -> int:
                     "failed": worker_summary.failed,
                     "idle": worker_summary.idle,
                     "result_refs": worker_summary.result_refs,
+                    "review_refs": worker_summary.review_refs,
                 },
             },
             indent=2,

@@ -29,6 +29,7 @@ def test_android_eyes_worker_run_once_scans_and_processes(tmp_path):
         root=str(tmp_path),
         max_items=1,
         scan_first=True,
+        notify_reviews=False,
     )
 
     assert result["success"] is True
@@ -36,6 +37,7 @@ def test_android_eyes_worker_run_once_scans_and_processes(tmp_path):
     assert status["success"] is True
     assert status["status"]["queue_completed"] == 1
     assert status["status"]["results"] == 1
+    assert status["status"]["review_pending"] == 1
 
 
 def test_android_eyes_worker_schedule_dry_run_creates_wrapper(tmp_path):
@@ -45,6 +47,7 @@ def test_android_eyes_worker_schedule_dry_run_creates_wrapper(tmp_path):
         period_ms=900000,
         max_items=2,
         scan_first=False,
+        notify_reviews=False,
         dry_run=True,
     )
 
@@ -55,6 +58,7 @@ def test_android_eyes_worker_schedule_dry_run_creates_wrapper(tmp_path):
     wrapper_text = wrapper_path.read_text()
     assert "eyes_tick.py" in wrapper_text
     assert "--skip-scan" in wrapper_text
+    assert "--no-notify" in wrapper_text
     assert "--job-id" in result["command"]
 
 

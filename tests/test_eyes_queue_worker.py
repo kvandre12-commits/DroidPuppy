@@ -33,7 +33,7 @@ def test_run_batch_creates_result_and_completes_queue_item(tmp_path):
     )
     eyes_inbox.scan_inbox(tmp_path)
 
-    summary = eyes_queue_worker.run_batch(tmp_path, max_items=1)
+    summary = eyes_queue_worker.run_batch(tmp_path, max_items=1, notify_reviews=False)
 
     assert summary.processed == 1
     assert summary.completed == 1
@@ -42,6 +42,11 @@ def test_run_batch_creates_result_and_completes_queue_item(tmp_path):
     assert result["worker_class"] == "bill_review"
     assert result["status"] == "completed"
     assert "$19.99" in " ".join(result["extracted_facts"])
+    assert len(summary.review_refs) == 1
+    review = json.loads(pathlib.Path(summary.review_refs[0]).read_text())
+    assert review["title"].startswith("Review Required: ")
+    assert review["body"].startswith("Artifact Ready")
+    assert (tmp_path / "review" / "review_required.json").is_file()
     assert len(list((tmp_path / "queue" / "completed").glob("*.json"))) == 1
 
 
@@ -51,7 +56,7 @@ def test_run_batch_prefers_high_priority_queue_items(tmp_path):
     (paths.inbox / "school_deadline.txt").write_text("assignment deadline tomorrow")
     eyes_inbox.scan_inbox(tmp_path)
 
-    summary = eyes_queue_worker.run_batch(tmp_path, max_items=1)
+    summary = eyes_queue_worker.run_batch(tmp_path, max_items=1, notify_reviews=False)
 
     result = json.loads(pathlib.Path(summary.result_refs[0]).read_text())
     assert result["worker_class"] == "school_digest"
@@ -64,9 +69,12 @@ def test_eyes_tick_scans_and_processes_in_one_shot(tmp_path):
         "This page says the task was approved."
     )
 
-    exit_code = eyes_tick.main(["--root", str(tmp_path), "--max-items", "1"])
+    exit_code = eyes_tick.main(
+        ["--root", str(tmp_path), "--max-items", "1", "--no-notify"]
+    )
 
     assert exit_code == 0
     status = eyes_queue_worker.status_snapshot(tmp_path)
     assert status["queue_completed"] == 1
     assert status["results"] == 1
+    assert status["review_pending"] == 0

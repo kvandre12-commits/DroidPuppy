@@ -56,6 +56,7 @@ def register_android_eyes_worker_run_once(agent: Any) -> None:
         root: str = "",
         max_items: int = 1,
         scan_first: bool = True,
+        notify_reviews: bool = True,
     ) -> dict[str, Any]:
         """Run one short-lived worker pass, optionally scanning inbox first."""
         del context
@@ -63,6 +64,7 @@ def register_android_eyes_worker_run_once(agent: Any) -> None:
             root=root,
             max_items=max_items,
             scan_first=scan_first,
+            notify_reviews=notify_reviews,
         )
 
 
@@ -75,6 +77,7 @@ def register_android_eyes_worker_schedule(agent: Any) -> None:
         period_ms: int = 900000,
         max_items: int = 1,
         scan_first: bool = True,
+        notify_reviews: bool = True,
         network: str = "any",
         battery_not_low: bool = True,
         storage_not_low: bool = False,
@@ -90,6 +93,7 @@ def register_android_eyes_worker_schedule(agent: Any) -> None:
             period_ms=period_ms,
             max_items=max_items,
             scan_first=scan_first,
+            notify_reviews=notify_reviews,
             network=network,
             battery_not_low=battery_not_low,
             storage_not_low=storage_not_low,

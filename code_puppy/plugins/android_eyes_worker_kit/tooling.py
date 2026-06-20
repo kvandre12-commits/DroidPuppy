@@ -85,6 +85,7 @@ def _create_wrapper_script(
     job_id: int,
     max_items: int,
     scan_first: bool,
+    notify_reviews: bool,
 ) -> dict[str, Any]:
     tick_script = _resolve_script("eyes_tick.py")
     if tick_script is None:
@@ -101,6 +102,8 @@ def _create_wrapper_script(
     ]
     if not scan_first:
         args.append("--skip-scan")
+    if not notify_reviews:
+        args.append("--no-notify")
     wrapper_path = _tick_wrapper_path(root, job_id)
     command = " ".join(shlex.quote(part) for part in args)
     content = (
@@ -132,10 +135,12 @@ def android_eyes_worker_doctor(root: str = "") -> dict[str, Any]:
         "commands": {
             "termux-job-scheduler": scheduler,
             "python": sys.executable,
+            "termux-notification": shutil.which("termux-notification"),
         },
         "capabilities": {
             "run_once": bool(queue_worker),
             "scheduled_tick": bool(queue_worker and tick_script and scheduler),
+            "review_notifications": bool(shutil.which("termux-notification")),
             "list_jobs": bool(scheduler),
             "cancel_job": bool(scheduler),
         },
@@ -175,6 +180,7 @@ def android_eyes_worker_run_once(
     root: str = "",
     max_items: int = 1,
     scan_first: bool = True,
+    notify_reviews: bool = True,
 ) -> dict[str, Any]:
     """Run one short-lived worker pass, optionally scanning inbox first."""
     script_name = "eyes_tick.py" if scan_first else "eyes_queue_worker.py"
@@ -189,8 +195,12 @@ def android_eyes_worker_run_once(
         command.extend(["--root", str(_resolve_root(root))])
     if scan_first:
         command.extend(["--max-items", str(max_items)])
+        if not notify_reviews:
+            command.append("--no-notify")
     else:
         command.extend(["run-batch", "--max-items", str(max_items)])
+        if not notify_reviews:
+            command.append("--no-notify")
     result = _run_command(command, timeout=60)
     return {
         "success": result.get("exit_code") == 0,
@@ -205,6 +215,7 @@ def android_eyes_worker_schedule(
     period_ms: int = DEFAULT_PERIOD_MS,
     max_items: int = 1,
     scan_first: bool = True,
+    notify_reviews: bool = True,
     network: str = "any",
     battery_not_low: bool = True,
     storage_not_low: bool = False,
@@ -224,6 +235,7 @@ def android_eyes_worker_schedule(
         job_id=job_id,
         max_items=max_items,
         scan_first=scan_first,
+        notify_reviews=notify_reviews,
     )
     command = [
         scheduler,

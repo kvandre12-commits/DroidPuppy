@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/eyes_review_required.schema.json",
+  "title": "EyesReviewRequired",
+  "description": "Supplemental governance-gate artifact telling the operator a human review is required before any further action.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "review_id": { "type": "string" },
+    "result_id": { "type": "string" },
+    "result_ref": { "type": "string" },
+    "queue_item_id": { "type": "string" },
+    "artifact_id": { "type": "string" },
+    "worker_class": {
+      "type": "string",
+      "enum": [
+        "ocr_review",
+        "page_summary",
+        "document_digest",
+        "structured_review",
+        "text_summary",
+        "bill_review",
+        "school_digest",
+        "compare_candidate",
+        "manual_triage"
+      ]
+    },
+    "title": { "type": "string" },
+    "body": { "type": "string" },
+    "action_required": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "reviewed"],
+      "default": "pending"
+    },
+    "source_artifact_path": { "type": ["string", "null"] },
+    "open_target": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "required": [
+    "contract_version",
+    "review_id",
+    "result_id",
+    "result_ref",
+    "queue_item_id",
+    "artifact_id",
+    "worker_class",
+    "title",
+    "body",
+    "action_required",
+    "status",
+    "source_artifact_path",
+    "open_target",
+    "created_at"
+  ],
+  "additionalProperties": false
+}
