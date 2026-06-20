@@ -257,6 +257,13 @@ def _build_queue_item(artifact: dict[str, Any], manifest_path: Path) -> dict[str
         ),
         "input_ref": str(manifest_path),
         "created_at": _now(),
+        "attempts": 0,
+        "worker_name": None,
+        "claimed_at": None,
+        "completed_at": None,
+        "failed_at": None,
+        "result_ref": None,
+        "last_error": None,
     }
     _validate(queue_item, "eyes_queue_item.schema.json")
     return queue_item

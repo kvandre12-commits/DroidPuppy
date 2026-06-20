@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/eyes_worker_result.schema.json",
+  "title": "EyesWorkerResult",
+  "description": "Supplemental contract for a one-shot local worker result produced from an eyes inbox queue item.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "result_id": { "type": "string" },
+    "queue_item_id": { "type": "string" },
+    "artifact_id": { "type": "string" },
+    "worker_name": { "type": "string" },
+    "worker_class": {
+      "type": "string",
+      "enum": [
+        "ocr_review",
+        "page_summary",
+        "document_digest",
+        "structured_review",
+        "text_summary",
+        "bill_review",
+        "school_digest",
+        "compare_candidate",
+        "manual_triage"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["completed", "failed"]
+    },
+    "summary": { "type": "string" },
+    "extracted_facts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "next_action": { "type": "string" },
+    "requires_human_review": { "type": "boolean" },
+    "source_manifest": { "type": "string" },
+    "source_artifact_path": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "required": [
+    "contract_version",
+    "result_id",
+    "queue_item_id",
+    "artifact_id",
+    "worker_name",
+    "worker_class",
+    "status",
+    "summary",
+    "extracted_facts",
+    "next_action",
+    "requires_human_review",
+    "source_manifest",
+    "source_artifact_path",
+    "created_at"
+  ],
+  "additionalProperties": false
+}

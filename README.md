@@ -53,6 +53,9 @@ Adds action-oriented helpers like click, fill input, and screenshot capture.
 ### `android_eyes_inbox_kit`
 Adds a low-friction local mail slot for text, URLs, screenshots, and files that should enter the Project OS eyes inbox.
 
+### `android_eyes_worker_kit`
+Adds one-shot queue-worker and Termux scheduler helpers so the eyes inbox can be processed headlessly without a fake forever daemon.
+
 ### `android_utility_kit`
 Adds Droid-native utilities such as app launching, settings routing, text sharing, and capability inspection.
 
@@ -127,6 +130,7 @@ For the portfolio and stewardship story, see:
 - Read page text, links, and HTML without raw CDP knowledge
 - Click links, fill inputs, and capture screenshots
 - Drop text, URLs, and files into a local eyes inbox for later background processing
+- Run one-shot eyes workers and schedule lightweight Termux wakeups for headless processing
 
 ## Notes
 

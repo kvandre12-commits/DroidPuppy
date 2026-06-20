@@ -34,7 +34,14 @@
     },
     "reason": { "type": "string" },
     "input_ref": { "type": "string" },
-    "created_at": { "type": "string", "format": "date-time" }
+    "created_at": { "type": "string", "format": "date-time" },
+    "attempts": { "type": "integer", "minimum": 0, "default": 0 },
+    "worker_name": { "type": ["string", "null"] },
+    "claimed_at": { "type": ["string", "null"], "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "failed_at": { "type": ["string", "null"], "format": "date-time" },
+    "result_ref": { "type": ["string", "null"] },
+    "last_error": { "type": ["string", "null"] }
   },
   "required": [
     "contract_version",

@@ -4,7 +4,7 @@
 > Last generated: 2026-06-20. Regenerate with `python scripts/gen_plugin_reference.py`.
 > Descriptions marked _(derived)_ were synthesized from the tool name (the source had no docstring — a good first contribution target).
 
-**36 plugins · 119 tools**
+**37 plugins · 126 tools**
 
 ## Index
 
@@ -22,6 +22,7 @@
 - [`android_dumpsys_kit`](#android-dumpsys-kit) — Register Android dumpsys kit tools. (3 tools)
 - [`android_edge_kit`](#android-edge-kit) — Register DroidPuppy 'edge' element-testing tools. (2 tools)
 - [`android_eyes_inbox_kit`](#android-eyes-inbox-kit) — Register Android eyes inbox tools. (8 tools)
+- [`android_eyes_worker_kit`](#android-eyes-worker-kit) — Register Android eyes worker tools. (7 tools)
 - [`android_friendly_router`](#android-friendly-router) — Register friendly Android router tools. (2 tools)
 - [`android_handoff_kit`](#android-handoff-kit) — Register Android handoff tools. (5 tools)
 - [`android_input_kit`](#android-input-kit) — Register Android input kit tools. (6 tools)
@@ -190,6 +191,20 @@ Register Android eyes inbox tools.
 | `android_eyes_inbox_stage_file` | Copy or move an existing local file into the eyes inbox. |
 | `android_eyes_inbox_scan` | Run the repo-local eyes inbox intake worker when available. |
 | `android_eyes_inbox_examples` | Show example calls for the Android eyes inbox helpers. |
+
+## android_eyes_worker_kit
+
+Register Android eyes worker tools.
+
+| Tool | Description |
+|------|-------------|
+| `android_eyes_worker_doctor` | Inspect eyes worker readiness, scripts, and scheduler capability. |
+| `android_eyes_worker_status` | Run the local queue worker status command and return its JSON output. |
+| `android_eyes_worker_run_once` | Run one short-lived worker pass, optionally scanning inbox first. |
+| `android_eyes_worker_schedule` | Create a Termux scheduler wrapper for the eyes worker tick. |
+| `android_eyes_worker_list_jobs` | List pending Termux scheduler jobs. |
+| `android_eyes_worker_cancel_job` | Cancel one scheduled eyes worker job by Termux job id. |
+| `android_eyes_worker_examples` | Show example calls for the eyes worker and scheduler helpers. |
 
 ## android_friendly_router
 

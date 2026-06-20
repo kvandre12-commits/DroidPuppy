@@ -51,11 +51,16 @@ Default root:
 Subdirectories:
 
 ```text
-inbox/          raw human-dropped files
-manifests/      validated EyesArtifact JSON
-queue/pending/  validated EyesQueueItem JSON
-processed/      files successfully ingested
-failed/         duplicate markers or error records
+inbox/            raw human-dropped files
+manifests/        validated EyesArtifact JSON
+queue/pending/    queue items waiting for a worker
+queue/claimed/    queue items temporarily claimed by a worker
+queue/completed/  queue items that produced a result
+queue/failed/     queue items that failed during worker execution
+results/          validated EyesWorkerResult JSON
+processed/        files successfully ingested
+failed/           duplicate markers or error records
+jobs/             generated Termux scheduler wrapper scripts
 ```
 
 ## Contracts
@@ -94,10 +99,28 @@ Low-friction Android ingress plugin:
 - `android_eyes_inbox_stage_file`
 - `android_eyes_inbox_scan`
 
+Headless worker + scheduler plugin:
+
+- `android_eyes_worker_doctor`
+- `android_eyes_worker_status`
+- `android_eyes_worker_run_once`
+- `android_eyes_worker_schedule`
+- `android_eyes_worker_list_jobs`
+- `android_eyes_worker_cancel_job`
+
+Repo-local worker scripts:
+
+```bash
+python scripts/eyes_queue_worker.py status
+python scripts/eyes_queue_worker.py run-once --max-items 1
+python scripts/eyes_tick.py --max-items 1
+```
+
 The split is intentional:
 
-- the **plugin** is the cheap mail slot into the inbox
-- the **script** is the local intake worker that validates and routes artifacts
+- the **ingress plugin** is the cheap mail slot into the inbox
+- the **queue worker** is the one-shot dancer that consumes pending work and exits
+- the **scheduler wrapper** installs event-driven wakeups instead of fake forever loops
 
 That keeps the operator path lightweight and lets background work happen when the system is ready for it.
 
@@ -116,6 +139,10 @@ Current routing is deliberately simple:
 - anything weird -> `manual_triage`
 
 This is enough to organize the pool before we teach more workers how to swim.
+
+The current worker slice stays deterministic and bounded: it produces typed
+result artifacts, updates queue status, and exits instead of clinging to life in
+a background loop until Android strangles it.
 
 ## Why this matters
 

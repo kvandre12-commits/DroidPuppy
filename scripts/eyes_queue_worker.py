@@ -1,0 +1,411 @@
+#!/usr/bin/env python3
+"""One-shot local worker for Project OS eyes inbox queue items.
+
+This is the first "dancer" in the headless orchestration lane:
+- pick one or more pending queue items
+- perform a bounded deterministic transformation
+- write a typed result artifact
+- move the queue item to completed or failed
+- exit immediately
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import re
+import uuid
+from dataclasses import dataclass
+from html.parser import HTMLParser
+from pathlib import Path
+from typing import Any
+
+import jsonschema
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+CONTRACTS_DIR = REPO_ROOT / "contracts" / "v1"
+DEFAULT_ROOT = Path.home() / ".project_os" / "eyes"
+WORKER_NAME = "eyes_queue_worker.v1"
+_PRIORITY_ORDER = {"high": 0, "normal": 1, "low": 2}
+_TEXTUAL_EXTENSIONS = {".txt", ".md", ".csv", ".log", ".json", ".html", ".htm"}
+_MAX_SUMMARY = 280
+
+
+class _HTMLTextExtractor(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.parts: list[str] = []
+
+    def handle_data(self, data: str) -> None:
+        text = data.strip()
+        if text:
+            self.parts.append(text)
+
+    def get_text(self) -> str:
+        return " ".join(self.parts)
+
+
+@dataclass(frozen=True)
+class WorkerPaths:
+    root: Path
+    manifests: Path
+    queue_pending: Path
+    queue_claimed: Path
+    queue_completed: Path
+    queue_failed: Path
+    results: Path
+    processed: Path
+    failed: Path
+
+
+@dataclass(frozen=True)
+class WorkerRunSummary:
+    processed: int
+    completed: int
+    failed: int
+    idle: bool
+    result_refs: list[str]
+
+
+def _now() -> str:
+    return dt.datetime.now(dt.timezone.utc).isoformat()
+
+
+def _uid(prefix: str) -> str:
+    return f"{prefix}-{uuid.uuid4().hex[:10]}"
+
+
+def resolve_paths(root: str | Path | None = None) -> WorkerPaths:
+    base = Path(root).expanduser().resolve() if root else DEFAULT_ROOT
+    return WorkerPaths(
+        root=base,
+        manifests=base / "manifests",
+        queue_pending=base / "queue" / "pending",
+        queue_claimed=base / "queue" / "claimed",
+        queue_completed=base / "queue" / "completed",
+        queue_failed=base / "queue" / "failed",
+        results=base / "results",
+        processed=base / "processed",
+        failed=base / "failed",
+    )
+
+
+def ensure_layout(root: str | Path | None = None) -> WorkerPaths:
+    paths = resolve_paths(root)
+    for path in (
+        paths.root,
+        paths.manifests,
+        paths.queue_pending,
+        paths.queue_claimed,
+        paths.queue_completed,
+        paths.queue_failed,
+        paths.results,
+        paths.processed,
+        paths.failed,
+    ):
+        path.mkdir(parents=True, exist_ok=True)
+    return paths
+
+
+def _load_schema(name: str) -> dict[str, Any]:
+    return json.loads((CONTRACTS_DIR / name).read_text())
+
+
+def _validate(payload: dict[str, Any], schema_name: str) -> None:
+    jsonschema.validate(payload, _load_schema(schema_name))
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text())
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
+def _normalize_text(value: str) -> str:
+    return re.sub(r"\s+", " ", value or "").strip()
+
+
+def _shorten(value: str, limit: int = _MAX_SUMMARY) -> str:
+    compact = _normalize_text(value)
+    if len(compact) <= limit:
+        return compact
+    return compact[: limit - 1].rstrip() + "…"
+
+
+def _manifest_path_for(queue_item: dict[str, Any]) -> Path:
+    return Path(str(queue_item["input_ref"]))
+
+
+def _artifact_text(manifest: dict[str, Any]) -> str:
+    stored_path = manifest.get("stored_path") or manifest.get("original_path")
+    if stored_path:
+        candidate = Path(str(stored_path))
+        if candidate.is_file() and candidate.suffix.lower() in _TEXTUAL_EXTENSIONS:
+            text = candidate.read_text(errors="replace")
+            if candidate.suffix.lower() in {".html", ".htm"}:
+                parser = _HTMLTextExtractor()
+                parser.feed(text)
+                return _normalize_text(parser.get_text())
+            return _normalize_text(text)
+    return _normalize_text(str(manifest.get("preview_text", "")))
+
+
+def _split_facts(text: str, *, max_facts: int = 3) -> list[str]:
+    chunks = [
+        chunk.strip(" -•\t") for chunk in re.split(r"[\n\.\?!]+", text) if chunk.strip()
+    ]
+    return [_shorten(chunk, limit=120) for chunk in chunks[:max_facts]]
+
+
+def _currency_facts(text: str) -> list[str]:
+    matches = re.findall(r"\$\s?\d+(?:,\d{3})*(?:\.\d{2})?", text)
+    return matches[:3]
+
+
+def _build_result(
+    queue_item: dict[str, Any], manifest: dict[str, Any]
+) -> dict[str, Any]:
+    worker_class = str(queue_item["worker_class"])
+    text = _artifact_text(manifest)
+    preview = text or str(manifest.get("preview_text", ""))
+    facts = _split_facts(preview)
+    requires_human_review = bool(manifest.get("requires_human_review", False))
+    next_action = "Review in queue."
+
+    if worker_class == "bill_review":
+        money = _currency_facts(preview)
+        facts = money + [fact for fact in facts if fact not in money]
+        summary = _shorten(preview or "Billing artifact requires review.")
+        next_action = (
+            "Check due amount, due date, and whether a payment action is needed."
+        )
+        requires_human_review = True
+    elif worker_class == "school_digest":
+        summary = _shorten(preview or "School-related artifact captured.")
+        next_action = (
+            "Verify deadlines, tasks, and any follow-up messages or submissions."
+        )
+    elif worker_class == "page_summary":
+        summary = _shorten(
+            preview or "Page text captured from a manually reached surface."
+        )
+        next_action = (
+            "Review summary and decide whether to preserve, compare, or escalate."
+        )
+    elif worker_class == "document_digest":
+        summary = _shorten(
+            preview or "Document captured; likely needs manual digestion."
+        )
+        next_action = "Open the document and perform a manual or OCR-assisted review."
+        requires_human_review = True
+    elif worker_class == "structured_review":
+        summary = _shorten(preview or "Structured artifact captured for inspection.")
+        next_action = "Inspect the structured data and route it to the appropriate downstream task."
+    elif worker_class == "compare_candidate":
+        summary = _shorten(preview or "Artifact looks like a compare/diff candidate.")
+        next_action = "Pair this with a sibling artifact for compare/diff review."
+        requires_human_review = True
+    elif worker_class == "ocr_review":
+        summary = "Image-like artifact captured; OCR or human review still required."
+        facts = [
+            str(manifest.get("stored_path") or manifest.get("original_path") or "")
+        ]
+        next_action = "Perform OCR or inspect the image manually."
+        requires_human_review = True
+    elif worker_class == "manual_triage":
+        summary = _shorten(preview or "Artifact needs manual triage.")
+        next_action = "Classify the artifact manually before delegating further work."
+        requires_human_review = True
+    else:
+        summary = _shorten(preview or "Text artifact captured for later review.")
+        next_action = (
+            "Review the summary and decide whether further extraction is needed."
+        )
+
+    result = {
+        "contract_version": "1.0.0",
+        "result_id": _uid("eyes-result"),
+        "queue_item_id": str(queue_item["queue_item_id"]),
+        "artifact_id": str(queue_item["artifact_id"]),
+        "worker_name": WORKER_NAME,
+        "worker_class": worker_class,
+        "status": "completed",
+        "summary": summary,
+        "extracted_facts": facts,
+        "next_action": next_action,
+        "requires_human_review": requires_human_review,
+        "source_manifest": str(queue_item["input_ref"]),
+        "source_artifact_path": manifest.get("stored_path")
+        or manifest.get("original_path"),
+        "created_at": _now(),
+    }
+    _validate(result, "eyes_worker_result.schema.json")
+    return result
+
+
+def _queue_sort_key(payload: dict[str, Any]) -> tuple[int, str, str]:
+    priority = _PRIORITY_ORDER.get(str(payload.get("priority", "normal")), 99)
+    created_at = str(payload.get("created_at", ""))
+    queue_item_id = str(payload.get("queue_item_id", ""))
+    return (priority, created_at, queue_item_id)
+
+
+def _pending_items(paths: WorkerPaths) -> list[tuple[Path, dict[str, Any]]]:
+    items: list[tuple[Path, dict[str, Any]]] = []
+    for path in paths.queue_pending.glob("*.json"):
+        payload = _read_json(path)
+        _validate(payload, "eyes_queue_item.schema.json")
+        items.append((path, payload))
+    items.sort(key=lambda item: _queue_sort_key(item[1]))
+    return items
+
+
+def _claim_item(
+    paths: WorkerPaths, path: Path, payload: dict[str, Any]
+) -> tuple[Path, dict[str, Any]]:
+    payload["status"] = "claimed"
+    payload["worker_name"] = WORKER_NAME
+    payload["claimed_at"] = _now()
+    payload["attempts"] = int(payload.get("attempts", 0)) + 1
+    _validate(payload, "eyes_queue_item.schema.json")
+    claimed_path = paths.queue_claimed / path.name
+    _write_json(claimed_path, payload)
+    path.unlink()
+    return claimed_path, payload
+
+
+def _complete_item(
+    paths: WorkerPaths,
+    claimed_path: Path,
+    payload: dict[str, Any],
+    result: dict[str, Any],
+) -> str:
+    result_path = paths.results / f"{result['result_id']}.json"
+    _write_json(result_path, result)
+    payload["status"] = "completed"
+    payload["completed_at"] = _now()
+    payload["result_ref"] = str(result_path)
+    payload["last_error"] = None
+    _validate(payload, "eyes_queue_item.schema.json")
+    destination = paths.queue_completed / claimed_path.name
+    _write_json(destination, payload)
+    claimed_path.unlink()
+    return str(result_path)
+
+
+def _fail_item(
+    paths: WorkerPaths, claimed_path: Path, payload: dict[str, Any], exc: Exception
+) -> None:
+    payload["status"] = "failed"
+    payload["failed_at"] = _now()
+    payload["last_error"] = repr(exc)
+    _validate(payload, "eyes_queue_item.schema.json")
+    destination = paths.queue_failed / claimed_path.name
+    _write_json(destination, payload)
+    claimed_path.unlink()
+
+
+def run_batch(
+    root: str | Path | None = None, *, max_items: int = 1
+) -> WorkerRunSummary:
+    if max_items < 1:
+        raise ValueError("max_items must be at least 1")
+    paths = ensure_layout(root)
+    processed = completed = failed = 0
+    result_refs: list[str] = []
+
+    for pending_path, payload in _pending_items(paths)[:max_items]:
+        processed += 1
+        claimed_path, claimed_payload = _claim_item(paths, pending_path, payload)
+        try:
+            manifest = _read_json(_manifest_path_for(claimed_payload))
+            _validate(manifest, "eyes_artifact.schema.json")
+            result = _build_result(claimed_payload, manifest)
+            result_refs.append(
+                _complete_item(paths, claimed_path, claimed_payload, result)
+            )
+            completed += 1
+        except Exception as exc:  # noqa: BLE001
+            _fail_item(paths, claimed_path, claimed_payload, exc)
+            failed += 1
+
+    return WorkerRunSummary(
+        processed=processed,
+        completed=completed,
+        failed=failed,
+        idle=processed == 0,
+        result_refs=result_refs,
+    )
+
+
+def status_snapshot(root: str | Path | None = None) -> dict[str, int | str]:
+    paths = ensure_layout(root)
+    return {
+        "root": str(paths.root),
+        "queue_pending": len(list(paths.queue_pending.glob("*.json"))),
+        "queue_claimed": len(list(paths.queue_claimed.glob("*.json"))),
+        "queue_completed": len(list(paths.queue_completed.glob("*.json"))),
+        "queue_failed": len(list(paths.queue_failed.glob("*.json"))),
+        "results": len(list(paths.results.glob("*.json"))),
+    }
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Project OS eyes queue worker")
+    parser.add_argument(
+        "--root",
+        help="Override the eyes root directory (default: ~/.project_os/eyes).",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers.add_parser("init", help="Create the queue worker folder layout.")
+    subparsers.add_parser("status", help="Show queue/result counts.")
+
+    run_once = subparsers.add_parser("run-once", help="Process at most one queue item.")
+    run_once.add_argument("--max-items", type=int, default=1)
+
+    run_batch_parser = subparsers.add_parser(
+        "run-batch", help="Process up to max-items queue items and exit."
+    )
+    run_batch_parser.add_argument("--max-items", type=int, default=3)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    if args.command == "init":
+        paths = ensure_layout(args.root)
+        print(f"Initialized eyes queue worker at {paths.root}")
+        return 0
+
+    if args.command == "status":
+        print(json.dumps(status_snapshot(args.root), indent=2, sort_keys=True))
+        return 0
+
+    if args.command in {"run-once", "run-batch"}:
+        summary = run_batch(args.root, max_items=args.max_items)
+        print(
+            json.dumps(
+                {
+                    "processed": summary.processed,
+                    "completed": summary.completed,
+                    "failed": summary.failed,
+                    "idle": summary.idle,
+                    "result_refs": summary.result_refs,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return 0
+
+    parser.error(f"Unknown command: {args.command}")
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

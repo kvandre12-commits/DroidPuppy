@@ -49,6 +49,7 @@ Current supplemental intake seam:
 |--------|------|
 | `v1/eyes_artifact.schema.json` | Validated manifest for manually surfaced local evidence dropped into the eyes inbox |
 | `v1/eyes_queue_item.schema.json` | Routed queue item created from an eyes inbox artifact for downstream workers |
+| `v1/eyes_worker_result.schema.json` | Typed result artifact emitted by a one-shot local worker after consuming a queue item |
 
 These let human-native access on Android become structured local work without
 forcing the Orchestra to stare at the foreground forever.

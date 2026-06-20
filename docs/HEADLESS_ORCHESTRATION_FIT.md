@@ -146,6 +146,13 @@ The next useful slice should look like:
 5. **review/report path**
    - notification, queue status, or operator brief
 
+This repo now has the first direct implementation of that shape in the eyes
+lane:
+
+- `scripts/eyes_queue_worker.py` = one-shot worker
+- `scripts/eyes_tick.py` = one-shot scan + consume scheduler target
+- `android_eyes_worker_kit` = Android/agent-facing wrapper around run/schedule/list/cancel
+
 ## Short answer
 
 The proposal fits the long-term kennels very well.
