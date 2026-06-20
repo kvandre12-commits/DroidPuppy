@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import pathlib
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -28,14 +29,38 @@ def test_discover_plugins_finds_real_overlay_plugins():
     assert "droidpuppy_doctor" in {plugin.name for plugin in plugins}
 
 
-def test_resolve_target_dir_defaults_to_user_plugins(monkeypatch, tmp_path):
+def test_resolve_default_user_plugins_dir_falls_back_without_loader(
+    monkeypatch, tmp_path
+):
     monkeypatch.setattr(
         install_overlay, "DEFAULT_USER_PLUGINS_DIR", tmp_path / "plugins"
     )
+    monkeypatch.setattr(
+        install_overlay, "_load_code_puppy_plugins_module", lambda: None
+    )
 
-    result = install_overlay.resolve_target_dir()
+    result = install_overlay.resolve_default_user_plugins_dir()
 
     assert result == (tmp_path / "plugins")
+
+
+def test_resolve_default_user_plugins_dir_uses_loader_helper(monkeypatch, tmp_path):
+    loader_dir = tmp_path / "loader_plugins"
+    loader_module = SimpleNamespace(get_user_plugins_dir=lambda: loader_dir)
+    monkeypatch.setattr(
+        install_overlay,
+        "_load_code_puppy_plugins_module",
+        lambda: loader_module,
+    )
+
+    result = install_overlay.resolve_default_user_plugins_dir()
+
+    assert result == loader_dir.resolve()
+
+
+def test_resolve_target_dir_rejects_conflicting_args():
+    with pytest.raises(SystemExit, match="either --target-dir or --project-dir"):
+        install_overlay.resolve_target_dir(target_dir="/tmp/a", project_dir="/tmp/b")
 
 
 def test_resolve_target_dir_project_mode(tmp_path):
@@ -139,3 +164,40 @@ def test_install_plugins_dry_run_does_not_touch_filesystem(tmp_path):
 
     assert results[0].status == "installed"
     assert not target.exists()
+
+
+def test_install_plugins_rejects_missing_entrypoint(tmp_path):
+    broken = tmp_path / "broken_plugin"
+    broken.mkdir()
+    target = tmp_path / "user_plugins"
+
+    with pytest.raises(SystemExit, match="missing register_callbacks.py"):
+        install_overlay.install_plugins([broken], target, mode="copy")
+
+
+def test_copied_plugin_is_loader_compatible(tmp_path):
+    source_root = tmp_path / "source"
+    source_plugin = source_root / "demo_plugin"
+    source_plugin.mkdir(parents=True)
+    (source_plugin / "register_callbacks.py").write_text(
+        "from pathlib import Path\n"
+        "(Path(__file__).parent / 'loaded.txt').write_text('ok')\n"
+    )
+    target = tmp_path / "user_plugins"
+
+    results = install_overlay.install_plugins([source_plugin], target, mode="copy")
+
+    assert results[0].status == "installed"
+
+    sys.path.insert(0, "/data/data/com.termux/files/home/code_puppy_backup_20260617")
+    try:
+        from code_puppy.plugins import _load_user_plugins
+
+        loaded = _load_user_plugins(target, skip_names=set())
+    finally:
+        sys.path.remove("/data/data/com.termux/files/home/code_puppy_backup_20260617")
+        sys.modules.pop("demo_plugin.register_callbacks", None)
+        sys.modules.pop("demo_plugin", None)
+
+    assert loaded == ["demo_plugin"]
+    assert (target / "demo_plugin" / "loaded.txt").read_text() == "ok"

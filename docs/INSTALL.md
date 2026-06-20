@@ -13,6 +13,10 @@ The preferred install target is Code Puppy's **user plugin tier**:
 
 That works whether Code Puppy came from `uvx`, `pip`, or a git checkout.
 
+The installer follows Code Puppy's real plugin-tier contract: it targets the
+loader's user plugin path when available and only installs plugin directories
+that expose a loadable `register_callbacks.py` entrypoint.
+
 ## Basic install
 
 1. Install Code Puppy from upstream.

@@ -9,9 +9,11 @@ DroidPuppy on top without mutating site-packages or Mike's checkout.
 from __future__ import annotations
 
 import argparse
+import importlib
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_PLUGINS_DIR = REPO_ROOT / "code_puppy" / "plugins"
@@ -25,8 +27,34 @@ class InstallResult:
     destination: Path
 
 
+def _load_code_puppy_plugins_module() -> ModuleType | None:
+    """Best-effort import of Code Puppy's plugin loader module."""
+    try:
+        module = importlib.import_module("code_puppy.plugins")
+    except Exception:
+        return None
+    return module
+
+
+def resolve_default_user_plugins_dir() -> Path:
+    """Resolve the user plugin dir from Code Puppy itself when possible."""
+    module = _load_code_puppy_plugins_module()
+    getter = getattr(module, "get_user_plugins_dir", None) if module else None
+    if callable(getter):
+        try:
+            resolved = getter()
+            if resolved is not None:
+                return Path(resolved).expanduser().resolve()
+        except Exception:
+            pass
+    return DEFAULT_USER_PLUGINS_DIR
+
+
 def discover_plugins(source_dir: Path = SOURCE_PLUGINS_DIR) -> list[Path]:
     """Return installable plugin directories sorted by name."""
+    if not source_dir.is_dir():
+        raise SystemExit(f"Source plugins directory not found: {source_dir}")
+
     plugins: list[Path] = []
     for entry in sorted(source_dir.iterdir(), key=lambda path: path.name.lower()):
         if not entry.is_dir() or entry.name.startswith((".", "_")):
@@ -42,11 +70,13 @@ def resolve_target_dir(
     project_dir: str | None = None,
 ) -> Path:
     """Resolve the final plugin directory for user or project installs."""
+    if target_dir and project_dir:
+        raise SystemExit("Choose either --target-dir or --project-dir, not both")
     if target_dir:
         return Path(target_dir).expanduser().resolve()
     if project_dir:
         return Path(project_dir).expanduser().resolve() / ".code_puppy" / "plugins"
-    return DEFAULT_USER_PLUGINS_DIR
+    return resolve_default_user_plugins_dir()
 
 
 def select_plugins(available: list[Path], names: list[str] | None) -> list[Path]:
@@ -69,6 +99,14 @@ def _remove_existing(path: Path) -> None:
         shutil.rmtree(path)
 
 
+def _validate_plugin_dir(plugin_dir: Path) -> None:
+    callbacks = plugin_dir / "register_callbacks.py"
+    if not callbacks.is_file():
+        raise SystemExit(
+            f"Plugin '{plugin_dir.name}' is missing register_callbacks.py: {callbacks}"
+        )
+
+
 def install_plugins(
     plugins: list[Path],
     target_dir: Path,
@@ -83,6 +121,7 @@ def install_plugins(
         target_dir.mkdir(parents=True, exist_ok=True)
 
     for plugin_dir in plugins:
+        _validate_plugin_dir(plugin_dir)
         destination = target_dir / plugin_dir.name
         if destination.exists() or destination.is_symlink():
             if not overwrite:
@@ -182,6 +221,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     available = discover_plugins()
+    if not available:
+        raise SystemExit(f"No installable plugins found under {SOURCE_PLUGINS_DIR}")
+
     if args.list:
         for plugin in available:
             print(plugin.name)
