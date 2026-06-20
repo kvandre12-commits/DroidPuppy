@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/eyes_queue_item.schema.json",
+  "title": "EyesQueueItem",
+  "description": "Supplemental local-intake contract for routed work items created from eyes inbox artifacts.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "queue_item_id": { "type": "string" },
+    "artifact_id": { "type": "string" },
+    "worker_class": {
+      "type": "string",
+      "enum": [
+        "ocr_review",
+        "page_summary",
+        "document_digest",
+        "structured_review",
+        "text_summary",
+        "bill_review",
+        "school_digest",
+        "compare_candidate",
+        "manual_triage"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "claimed", "completed", "failed"],
+      "default": "pending"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "normal", "high"],
+      "default": "normal"
+    },
+    "reason": { "type": "string" },
+    "input_ref": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "required": [
+    "contract_version",
+    "queue_item_id",
+    "artifact_id",
+    "worker_class",
+    "status",
+    "priority",
+    "reason",
+    "input_ref",
+    "created_at"
+  ],
+  "additionalProperties": false
+}

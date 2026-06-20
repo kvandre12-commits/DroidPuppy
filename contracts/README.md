@@ -38,6 +38,21 @@ See `../docs/ORCHESTRA_AGENT.md` (the constitution) and
 Contracts are immutable once published. Breaking changes go in a new directory
 (`v2/`, ...). Producers and consumers negotiate on `contract_version`.
 
+## Supplemental local-intake contracts
+
+The repo can also carry bounded adjunct contracts when they support the same
+Project OS doctrine without pretending to replace the core five.
+
+Current supplemental intake seam:
+
+| Schema | Role |
+|--------|------|
+| `v1/eyes_artifact.schema.json` | Validated manifest for manually surfaced local evidence dropped into the eyes inbox |
+| `v1/eyes_queue_item.schema.json` | Routed queue item created from an eyes inbox artifact for downstream workers |
+
+These let human-native access on Android become structured local work without
+forcing the Orchestra to stare at the foreground forever.
+
 ## Status
 
 v1 draft. The schemas exist before the Orchestra Agent does, on purpose: the

@@ -83,6 +83,11 @@ The Orchestra Agent owns the work's correctness from cradle to grave. That is
 what "sole coordinator" buys: the chaos is absorbed by the system, not by the
 operator.
 
+A valid handoff may originate from a human-surfaced local artifact as well as
+from a machine-produced upstream step. If the operator can manually reach a
+hostile or boxed surface and drop a bounded artifact into the eyes inbox, that
+artifact becomes contract-eligible input for downstream orchestration.
+
 ---
 
 ## Status

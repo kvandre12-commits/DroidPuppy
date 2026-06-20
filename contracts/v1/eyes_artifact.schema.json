@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/eyes_artifact.schema.json",
+  "title": "EyesArtifact",
+  "description": "Supplemental local-intake contract for manually surfaced evidence dropped into the Project OS eyes inbox.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "artifact_id": { "type": "string" },
+    "source_type": {
+      "type": "string",
+      "enum": ["manual_snapshot", "manual_export", "manual_note", "unknown"]
+    },
+    "artifact_kind": {
+      "type": "string",
+      "enum": ["image", "text", "html", "pdf", "json", "unknown"]
+    },
+    "captured_at": { "type": "string", "format": "date-time" },
+    "ingested_at": { "type": "string", "format": "date-time" },
+    "original_path": { "type": "string" },
+    "stored_path": { "type": ["string", "null"] },
+    "sha256": { "type": "string" },
+    "bytes": { "type": "integer", "minimum": 0 },
+    "mime_type": { "type": "string" },
+    "labels": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "preview_text": { "type": "string" },
+    "routing_hint": {
+      "type": "string",
+      "enum": [
+        "ocr_review",
+        "page_summary",
+        "document_digest",
+        "structured_review",
+        "text_summary",
+        "bill_review",
+        "school_digest",
+        "compare_candidate",
+        "manual_triage"
+      ]
+    },
+    "requires_human_review": { "type": "boolean" },
+    "operator_notes": { "type": "string" }
+  },
+  "required": [
+    "contract_version",
+    "artifact_id",
+    "source_type",
+    "artifact_kind",
+    "captured_at",
+    "ingested_at",
+    "original_path",
+    "stored_path",
+    "sha256",
+    "bytes",
+    "mime_type",
+    "labels",
+    "preview_text",
+    "routing_hint",
+    "requires_human_review",
+    "operator_notes"
+  ],
+  "additionalProperties": false
+}

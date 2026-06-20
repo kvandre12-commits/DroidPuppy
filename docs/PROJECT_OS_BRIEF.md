@@ -53,6 +53,7 @@ Examples in this repo:
 - support bundles
 - Orchestra contracts
 - task/observation/result boundaries
+- eyes inbox artifacts and routed local queue items for human-surfaced evidence
 
 ### 3. The phone is a first-class surface
 
