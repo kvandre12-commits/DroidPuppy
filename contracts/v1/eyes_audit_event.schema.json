@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/eyes_audit_event.schema.json",
+  "title": "EyesAuditEvent",
+  "description": "Supplemental immutable audit event stamped whenever an operator approves or rejects a review artifact.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "event_id": { "type": "string" },
+    "event_type": { "type": "string", "const": "review_decision" },
+    "decision": { "type": "string", "enum": ["APPROVED", "REJECTED"] },
+    "review_ref": { "type": "string" },
+    "review_sha256": { "type": "string" },
+    "review_artifact": { "type": "object", "additionalProperties": true },
+    "decided_by": { "type": "string" },
+    "decision_reason": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "timestamp_ns": { "type": "integer", "minimum": 0 },
+    "previous_event_sha256": { "type": ["string", "null"] },
+    "event_sha256": { "type": "string" }
+  },
+  "required": [
+    "contract_version",
+    "event_id",
+    "event_type",
+    "decision",
+    "review_ref",
+    "review_sha256",
+    "review_artifact",
+    "decided_by",
+    "decision_reason",
+    "timestamp",
+    "timestamp_ns",
+    "previous_event_sha256",
+    "event_sha256"
+  ],
+  "additionalProperties": false
+}

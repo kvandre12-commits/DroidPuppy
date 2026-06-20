@@ -59,7 +59,11 @@ queue/completed/  queue items that produced a result
 queue/failed/     queue items that failed during worker execution
 results/          validated EyesWorkerResult JSON
 review/pending/   review-required artifacts waiting for a human
-review/review_required.json  latest human-review gate artifact
+review/approved/  review artifacts that were explicitly approved
+review/rejected/  review artifacts that were explicitly rejected
+review/review_required.json  latest review artifact, pending or decided
+leases/active/    short-lived execution leases minted only on approval
+audit/events/     immutable-ish decision trail with SHA-256 chain pointers
 processed/        files successfully ingested
 failed/           duplicate markers or error records
 jobs/             generated Termux scheduler wrapper scripts
@@ -116,6 +120,9 @@ Repo-local worker scripts:
 python scripts/eyes_queue_worker.py status
 python scripts/eyes_queue_worker.py run-once --max-items 1
 python scripts/eyes_tick.py --max-items 1
+python scripts/eyes_review_gate.py --list-pending
+python scripts/eyes_review_gate.py --approve <review_id> --decided-by butcher
+python scripts/eyes_review_gate.py --reject <review_id> --decided-by butcher --reason "not safe"
 ```
 
 The split is intentional:
@@ -168,7 +175,15 @@ termux-job-scheduler
 -> review/review_required.json
 -> termux-notification
 -> operator reviews
+-> eyes_review_gate.py --approve/--reject
+-> audit/events/<timestamp>_<id>.json
+-> leases/active/<lease>.json on approval only
 ```
 
 No dashboard. No daemon. No fake approval empire. Just enough to prove the
 human gate belongs between recommendation and action.
+
+Important honesty clause: the audit trail is currently **tamper-evident**, not a
+full cryptographic signing system. Each decision event stores the original
+review artifact snapshot, its SHA-256 digest, and the previous event hash so the
+chain is obvious if somebody gets sneaky.

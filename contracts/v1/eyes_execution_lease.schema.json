@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/eyes_execution_lease.schema.json",
+  "title": "EyesExecutionLease",
+  "description": "Supplemental short-lived execution lease minted only after explicit operator approval of a review artifact.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "lease_id": { "type": "string" },
+    "review_id": { "type": "string" },
+    "result_id": { "type": "string" },
+    "artifact_id": { "type": "string" },
+    "worker_class": {
+      "type": "string",
+      "enum": [
+        "ocr_review",
+        "page_summary",
+        "document_digest",
+        "structured_review",
+        "text_summary",
+        "bill_review",
+        "school_digest",
+        "compare_candidate",
+        "manual_triage"
+      ]
+    },
+    "issued_by": { "type": "string" },
+    "lease_scope": { "type": "string" },
+    "max_uses": { "type": "integer", "minimum": 1 },
+    "remaining_uses": { "type": "integer", "minimum": 0 },
+    "status": {
+      "type": "string",
+      "enum": ["active", "used", "expired", "revoked"]
+    },
+    "decision_event_ref": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" }
+  },
+  "required": [
+    "contract_version",
+    "lease_id",
+    "review_id",
+    "result_id",
+    "artifact_id",
+    "worker_class",
+    "issued_by",
+    "lease_scope",
+    "max_uses",
+    "remaining_uses",
+    "status",
+    "decision_event_ref",
+    "created_at",
+    "expires_at"
+  ],
+  "additionalProperties": false
+}

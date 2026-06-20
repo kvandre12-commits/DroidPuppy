@@ -150,7 +150,7 @@ This repo now has the first direct implementation of that shape in the eyes
 lane:
 
 - `scripts/eyes_queue_worker.py` = one-shot worker
-- `scripts/eyes_review_gate.py` = minimal review artifact + notification gate
+- `scripts/eyes_review_gate.py` = minimal review artifact + notification gate + approve/reject CLI
 - `scripts/eyes_tick.py` = one-shot scan + consume scheduler target
 - `android_eyes_worker_kit` = Android/agent-facing wrapper around run/schedule/list/cancel
 
@@ -170,3 +170,9 @@ In plain English:
 > keep state on disk,
 > let events wake work up,
 > and stop making Android fight us for sport.
+
+The governance refinement now demonstrated in the eyes lane is:
+
+```text
+Review Required -> Operator Decision -> Audit Event -> Lease -> later harmless action
+```

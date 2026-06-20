@@ -30,12 +30,17 @@
     "action_required": { "type": "string" },
     "status": {
       "type": "string",
-      "enum": ["pending", "reviewed"],
+      "enum": ["pending", "approved", "rejected"],
       "default": "pending"
     },
     "source_artifact_path": { "type": ["string", "null"] },
     "open_target": { "type": "string" },
-    "created_at": { "type": "string", "format": "date-time" }
+    "created_at": { "type": "string", "format": "date-time" },
+    "decided_at": { "type": ["string", "null"], "format": "date-time" },
+    "decided_by": { "type": ["string", "null"] },
+    "decision_reason": { "type": ["string", "null"] },
+    "audit_event_ref": { "type": ["string", "null"] },
+    "lease_ref": { "type": ["string", "null"] }
   },
   "required": [
     "contract_version",
@@ -51,7 +56,12 @@
     "status",
     "source_artifact_path",
     "open_target",
-    "created_at"
+    "created_at",
+    "decided_at",
+    "decided_by",
+    "decision_reason",
+    "audit_event_ref",
+    "lease_ref"
   ],
   "additionalProperties": false
 }

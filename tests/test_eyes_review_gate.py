@@ -34,20 +34,25 @@ def _fake_result() -> dict[str, str | bool]:
     }
 
 
-def test_emit_review_required_writes_pending_and_latest(tmp_path):
+def _emit_pending_review(tmp_path: pathlib.Path) -> tuple[dict, pathlib.Path]:
     result = eyes_review_gate.emit_review_required(
         _fake_result(),
         tmp_path / "results" / "eyes-result-123.json",
         root=tmp_path,
         notify=False,
     )
+    review_path = pathlib.Path(result["review_ref"])
+    return json.loads(review_path.read_text()), review_path
 
-    pending = json.loads(pathlib.Path(result["review_ref"]).read_text())
+
+def test_emit_review_required_writes_pending_and_latest(tmp_path):
+    pending, _ = _emit_pending_review(tmp_path)
     latest = json.loads((tmp_path / "review" / "review_required.json").read_text())
 
     assert pending["artifact_id"] == "trade_card_001"
     assert pending["title"] == "Review Required: trade_card_001"
     assert pending["body"].startswith("Artifact Ready")
+    assert pending["status"] == "pending"
     assert latest["review_id"] == pending["review_id"]
 
 
@@ -79,3 +84,93 @@ def test_emit_review_required_posts_notification_when_available(tmp_path, monkey
     assert notification["command"][0] == "/usr/bin/termux-notification"
     assert "--action" in notification["command"]
     assert "/usr/bin/termux-open" in notification["tap_action"]
+
+
+def test_approve_moves_review_mints_lease_and_audit_event(tmp_path):
+    pending, _ = _emit_pending_review(tmp_path)
+
+    result = eyes_review_gate.decide_review(
+        pending["review_id"],
+        approve=True,
+        root=tmp_path,
+        decided_by="butcher",
+        reason="Looks safe.",
+        lease_minutes=10,
+    )
+
+    approved = json.loads(pathlib.Path(result["review_ref"]).read_text())
+    audit = json.loads(pathlib.Path(result["audit_event_ref"]).read_text())
+    lease = json.loads(pathlib.Path(result["lease_ref"]).read_text())
+
+    assert approved["status"] == "approved"
+    assert approved["decided_by"] == "butcher"
+    assert approved["decision_reason"] == "Looks safe."
+    assert not any((tmp_path / "review" / "pending").glob("*.json"))
+    assert audit["decision"] == "APPROVED"
+    assert audit["review_artifact"]["status"] == "pending"
+    assert lease["status"] == "active"
+    assert lease["remaining_uses"] == 1
+    assert lease["decision_event_ref"] == result["audit_event_ref"]
+
+
+def test_reject_moves_review_and_stamps_audit_without_lease(tmp_path):
+    pending, _ = _emit_pending_review(tmp_path)
+
+    result = eyes_review_gate.decide_review(
+        pending["review_id"],
+        approve=False,
+        root=tmp_path,
+        decided_by="butcher",
+        reason="Nope.",
+    )
+
+    rejected = json.loads(pathlib.Path(result["review_ref"]).read_text())
+    audit = json.loads(pathlib.Path(result["audit_event_ref"]).read_text())
+
+    assert rejected["status"] == "rejected"
+    assert rejected["lease_ref"] is None
+    assert result["lease_ref"] is None
+    assert audit["decision"] == "REJECTED"
+    assert not any((tmp_path / "leases" / "active").glob("*.json"))
+
+
+def test_audit_events_form_hash_chain(tmp_path):
+    first, _ = _emit_pending_review(tmp_path)
+    eyes_review_gate.decide_review(first["review_id"], approve=True, root=tmp_path)
+
+    second, _ = _emit_pending_review(tmp_path)
+    result = eyes_review_gate.decide_review(
+        second["review_id"], approve=False, root=tmp_path
+    )
+
+    audit_files = sorted((tmp_path / "audit" / "events").glob("*.json"))
+    first_event = json.loads(audit_files[0].read_text())
+    second_event = json.loads(audit_files[1].read_text())
+
+    assert second_event["previous_event_sha256"] == first_event["event_sha256"]
+    assert (
+        json.loads(pathlib.Path(result["audit_event_ref"]).read_text())["event_id"]
+        == second_event["event_id"]
+    )
+
+
+def test_main_approve_cli_returns_zero_and_lists_pending(tmp_path):
+    pending, _ = _emit_pending_review(tmp_path)
+
+    list_code = eyes_review_gate.main(["--root", str(tmp_path), "--list-pending"])
+    approve_code = eyes_review_gate.main(
+        [
+            "--root",
+            str(tmp_path),
+            "--approve",
+            pending["review_id"],
+            "--decided-by",
+            "butcher",
+            "--reason",
+            "ship it",
+        ]
+    )
+
+    assert list_code == 0
+    assert approve_code == 0
+    assert any((tmp_path / "review" / "approved").glob("*.json"))

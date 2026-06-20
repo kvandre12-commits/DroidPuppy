@@ -51,6 +51,8 @@ Current supplemental intake seam:
 | `v1/eyes_queue_item.schema.json` | Routed queue item created from an eyes inbox artifact for downstream workers |
 | `v1/eyes_worker_result.schema.json` | Typed result artifact emitted by a one-shot local worker after consuming a queue item |
 | `v1/eyes_review_required.schema.json` | Minimal governance-gate artifact telling the operator a human review is required |
+| `v1/eyes_execution_lease.schema.json` | Short-lived execution lease minted only after explicit operator approval |
+| `v1/eyes_audit_event.schema.json` | Immutable-ish decision event with original review snapshot and SHA-256 chain pointer |
 
 These let human-native access on Android become structured local work without
 forcing the Orchestra to stare at the foreground forever.
