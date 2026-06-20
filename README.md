@@ -111,6 +111,7 @@ For a fuller setup guide, see:
 - [`docs/PLUGIN_REFERENCE.md`](docs/PLUGIN_REFERENCE.md) — full auto-generated tool index
 - [`docs/DEVELOPER_TOOLS.md`](docs/DEVELOPER_TOOLS.md)
 - [`docs/EYES_INBOX.md`](docs/EYES_INBOX.md) — local evidence intake for manual snapshots/exports
+- [`docs/HEADLESS_ORCHESTRATION_FIT.md`](docs/HEADLESS_ORCHESTRATION_FIT.md) — how short-lived planners, micro-workers, durable state, and Android triggers fit the existing Project OS trail
 
 For the portfolio and stewardship story, see:
 
