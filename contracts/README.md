@@ -53,9 +53,28 @@ Current supplemental intake seam:
 | `v1/eyes_review_required.schema.json` | Minimal governance-gate artifact telling the operator a human review is required |
 | `v1/eyes_execution_lease.schema.json` | Short-lived execution lease minted only after explicit operator approval |
 | `v1/eyes_audit_event.schema.json` | Immutable-ish decision event with original review snapshot and SHA-256 chain pointer |
+| `v2/eyes_execution_lease.schema.json` | Principal-bound, capability-scoped lease with quotas and runtime constraints |
+| `v2/eyes_audit_event.schema.json` | Shared authority event contract for review decisions, lease lifecycle, breaker trips, and containment telemetry |
 
 These let human-native access on Android become structured local work without
 forcing the Orchestra to stare at the foreground forever.
+
+## Active-containment notes
+
+The current v2 authority path now depends on these contract truths:
+
+- `eyes_audit_event.schema.json` is consumed by both DroidPuppy review-gate code
+  and the root Code Puppy authority gateway audit writer
+- `anomaly_detected` is a first-class audit event used when the runtime circuit
+  breaker trips on repeated constraint violations or runaway shell/intent loops
+- after an anomaly-triggered revoke, the root gateway can place the principal
+  into a short quarantine cooldown window before further tracked tool calls are
+  evaluated
+- schema validity matters operationally: malformed JSON in the shared audit
+  schema can silently break authority-event validation/writes upstream
+
+When changing these schemas, treat them as cross-repo load-bearing walls, not
+local implementation details.
 
 ## Status
 
