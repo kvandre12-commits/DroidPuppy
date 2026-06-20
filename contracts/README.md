@@ -67,6 +67,8 @@ The current v2 authority path now depends on these contract truths:
   and the root Code Puppy authority gateway audit writer
 - `anomaly_detected` is a first-class audit event used when the runtime circuit
   breaker trips on repeated constraint violations or runaway shell/intent loops
+- `quarantine_released` records a manual operator override when a principal is
+  explicitly let back out of containment before the cooldown expires
 - after an anomaly-triggered revoke, the root gateway can place the principal
   into a short quarantine cooldown window before further tracked tool calls are
   evaluated

@@ -17,6 +17,7 @@
         "tool_failed",
         "lease_consumed",
         "anomaly_detected",
+        "quarantine_released",
         "lease_revoked",
         "leases_revoked"
       ]
