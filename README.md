@@ -50,6 +50,9 @@ Wraps lower-level browser control in plain-language helpers like reading page te
 ### `android_browser_actions`
 Adds action-oriented helpers like click, fill input, and screenshot capture.
 
+### `android_eyes_inbox_kit`
+Adds a low-friction local mail slot for text, URLs, screenshots, and files that should enter the Project OS eyes inbox.
+
 ### `android_utility_kit`
 Adds Droid-native utilities such as app launching, settings routing, text sharing, and capability inspection.
 
@@ -122,6 +125,7 @@ For the portfolio and stewardship story, see:
 - Reach live browser CDP endpoints on Android
 - Read page text, links, and HTML without raw CDP knowledge
 - Click links, fill inputs, and capture screenshots
+- Drop text, URLs, and files into a local eyes inbox for later background processing
 
 ## Notes
 

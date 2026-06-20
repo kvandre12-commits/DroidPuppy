@@ -68,7 +68,9 @@ Supplemental v1 contracts:
 These are not replacements for the core five Orchestra contracts. They are a
 bounded local intake seam that can later feed larger workflows.
 
-## Script
+## Tools and script
+
+Repo-local worker commands:
 
 ```bash
 python scripts/eyes_inbox.py init
@@ -81,6 +83,23 @@ Optional custom root:
 ```bash
 python scripts/eyes_inbox.py --root /path/to/eyes init
 ```
+
+Low-friction Android ingress plugin:
+
+- `android_eyes_inbox_doctor`
+- `android_eyes_inbox_init`
+- `android_eyes_inbox_status`
+- `android_eyes_inbox_drop_text`
+- `android_eyes_inbox_drop_url`
+- `android_eyes_inbox_stage_file`
+- `android_eyes_inbox_scan`
+
+The split is intentional:
+
+- the **plugin** is the cheap mail slot into the inbox
+- the **script** is the local intake worker that validates and routes artifacts
+
+That keeps the operator path lightweight and lets background work happen when the system is ready for it.
 
 ## Routing behavior in the thin slice
 

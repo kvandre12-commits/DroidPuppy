@@ -1,13 +1,14 @@
 # DroidPuppy Plugin Reference
 
 > Auto-generated inventory of every DroidPuppy plugin and its tools.
-> Last generated: 2026-06-14. Regenerate with `python scripts/gen_plugin_reference.py`.
+> Last generated: 2026-06-20. Regenerate with `python scripts/gen_plugin_reference.py`.
 > Descriptions marked _(derived)_ were synthesized from the tool name (the source had no docstring — a good first contribution target).
 
-**34 plugins · 110 tools**
+**36 plugins · 119 tools**
 
 ## Index
 
+- [`android_app_doctor_kit`](#android-app-doctor-kit) — Register the Android App Doctor tool. (1 tools)
 - [`android_app_inventory_kit`](#android-app-inventory-kit) — Register Android app inventory and profiling tools. (3 tools)
 - [`android_app_stack_report_kit`](#android-app-stack-report-kit) — Register app stack reporting tools. (3 tools)
 - [`android_app_workflow_kit`](#android-app-workflow-kit) — Register named cross-app workflow tools. (3 tools)
@@ -20,6 +21,7 @@
 - [`android_cdp_client`](#android-cdp-client) — Register Android CDP client tools. (4 tools)
 - [`android_dumpsys_kit`](#android-dumpsys-kit) — Register Android dumpsys kit tools. (3 tools)
 - [`android_edge_kit`](#android-edge-kit) — Register DroidPuppy 'edge' element-testing tools. (2 tools)
+- [`android_eyes_inbox_kit`](#android-eyes-inbox-kit) — Register Android eyes inbox tools. (8 tools)
 - [`android_friendly_router`](#android-friendly-router) — Register friendly Android router tools. (2 tools)
 - [`android_handoff_kit`](#android-handoff-kit) — Register Android handoff tools. (5 tools)
 - [`android_input_kit`](#android-input-kit) — Register Android input kit tools. (6 tools)
@@ -44,6 +46,14 @@
 - [`droidpuppy_doctor`](#droidpuppy-doctor) — Register the DroidPuppy master doctor tool. (1 tools)
 
 ---
+
+## android_app_doctor_kit
+
+Register the Android App Doctor tool.
+
+| Tool | Description |
+|------|-------------|
+| `android_app_doctor` | Diagnose misbehaving apps from logcat (or pasted ``log_text``). |
 
 ## android_app_inventory_kit
 
@@ -165,6 +175,21 @@ Register DroidPuppy 'edge' element-testing tools.
 |------|-------------|
 | `android_edge_test_element` | Test a CSS selector on a live page: existence, count, text, attrs, geometry, visibility. |
 | `android_edge_assert_text` | Assert the first element matching a selector contains expected text; returns passed + actual. |
+
+## android_eyes_inbox_kit
+
+Register Android eyes inbox tools.
+
+| Tool | Description |
+|------|-------------|
+| `android_eyes_inbox_doctor` | Inspect local eyes inbox readiness and optional scanner availability. |
+| `android_eyes_inbox_init` | Create the local eyes inbox folder layout. |
+| `android_eyes_inbox_status` | Report file counts for the local eyes inbox. |
+| `android_eyes_inbox_drop_text` | Write plain text directly into the eyes inbox as a note. |
+| `android_eyes_inbox_drop_url` | Write a URL and optional note into the eyes inbox for later review. |
+| `android_eyes_inbox_stage_file` | Copy or move an existing local file into the eyes inbox. |
+| `android_eyes_inbox_scan` | Run the repo-local eyes inbox intake worker when available. |
+| `android_eyes_inbox_examples` | Show example calls for the Android eyes inbox helpers. |
 
 ## android_friendly_router
 
