@@ -24,6 +24,8 @@ from typing import Any
 import jsonschema
 
 import eyes_review_gate
+import eyes_worker_recovery
+import eyes_worker_runtime
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONTRACTS_DIR = REPO_ROOT / "contracts" / "v1"
@@ -72,6 +74,10 @@ class WorkerRunSummary:
     idle: bool
     result_refs: list[str]
     review_refs: list[str]
+    run_id: str
+
+
+RecoverySummary = eyes_worker_recovery.RecoverySummary
 
 
 def _now() -> str:
@@ -275,12 +281,18 @@ def _pending_items(paths: WorkerPaths) -> list[tuple[Path, dict[str, Any]]]:
 
 
 def _claim_item(
-    paths: WorkerPaths, path: Path, payload: dict[str, Any]
+    paths: WorkerPaths,
+    path: Path,
+    payload: dict[str, Any],
+    *,
+    run_id: str,
 ) -> tuple[Path, dict[str, Any]]:
     payload["status"] = "claimed"
+    payload["run_id"] = run_id
     payload["worker_name"] = WORKER_NAME
     payload["claimed_at"] = _now()
     payload["attempts"] = int(payload.get("attempts", 0)) + 1
+    payload["review_ref"] = None
     _validate(payload, "eyes_queue_item.schema.json")
     claimed_path = paths.queue_claimed / path.name
     _write_json(claimed_path, payload)
@@ -288,23 +300,28 @@ def _claim_item(
     return claimed_path, payload
 
 
+def _write_result(paths: WorkerPaths, result: dict[str, Any]) -> str:
+    result_path = paths.results / f"{result['result_id']}.json"
+    _write_json(result_path, result)
+    return str(result_path)
+
+
 def _complete_item(
     paths: WorkerPaths,
     claimed_path: Path,
     payload: dict[str, Any],
-    result: dict[str, Any],
-) -> str:
-    result_path = paths.results / f"{result['result_id']}.json"
-    _write_json(result_path, result)
+    *,
+    result_path: str,
+) -> Path:
     payload["status"] = "completed"
     payload["completed_at"] = _now()
-    payload["result_ref"] = str(result_path)
+    payload["result_ref"] = result_path
     payload["last_error"] = None
     _validate(payload, "eyes_queue_item.schema.json")
     destination = paths.queue_completed / claimed_path.name
     _write_json(destination, payload)
     claimed_path.unlink()
-    return str(result_path)
+    return destination
 
 
 def _fail_item(
@@ -319,6 +336,36 @@ def _fail_item(
     claimed_path.unlink()
 
 
+def _attach_review_ref(
+    queue_path: Path, payload: dict[str, Any], review_ref: str
+) -> dict[str, Any]:
+    payload["review_ref"] = review_ref
+    _validate(payload, "eyes_queue_item.schema.json")
+    _write_json(queue_path, payload)
+    return payload
+
+
+def _stale_claims(paths: WorkerPaths, *, stale_after_seconds: int) -> int:
+    return eyes_worker_recovery.count_stale_claims(
+        paths.root,
+        stale_after_seconds=stale_after_seconds,
+    )
+
+
+def recover_stale_claims(
+    root: str | Path | None = None,
+    *,
+    stale_after_seconds: int = 900,
+    notify_reviews: bool = False,
+) -> RecoverySummary:
+    return eyes_worker_recovery.recover_stale_claims(
+        root,
+        stale_after_seconds=stale_after_seconds,
+        notify_reviews=notify_reviews,
+        worker_name=WORKER_NAME,
+    )
+
+
 def run_batch(
     root: str | Path | None = None,
     *,
@@ -328,19 +375,46 @@ def run_batch(
     if max_items < 1:
         raise ValueError("max_items must be at least 1")
     paths = ensure_layout(root)
+    run_handle = eyes_worker_runtime.begin_run(
+        paths.root,
+        worker_name=WORKER_NAME,
+        max_items=max_items,
+    )
     processed = completed = failed = 0
     result_refs: list[str] = []
     review_refs: list[str] = []
 
     for pending_path, payload in _pending_items(paths)[:max_items]:
         processed += 1
-        claimed_path, claimed_payload = _claim_item(paths, pending_path, payload)
+        claimed_path, claimed_payload = _claim_item(
+            paths,
+            pending_path,
+            payload,
+            run_id=str(run_handle.checkpoint["run_id"]),
+        )
+        eyes_worker_runtime.record_claim(
+            run_handle,
+            claimed_payload,
+            claimed_path=claimed_path,
+        )
         try:
             manifest = _read_json(_manifest_path_for(claimed_payload))
             _validate(manifest, "eyes_artifact.schema.json")
             result = _build_result(claimed_payload, manifest)
-            result_path = _complete_item(paths, claimed_path, claimed_payload, result)
+            result_path = _write_result(paths, result)
+            eyes_worker_runtime.record_result_written(
+                run_handle,
+                claimed_payload,
+                result_ref=result_path,
+            )
+            completed_queue_path = _complete_item(
+                paths,
+                claimed_path,
+                claimed_payload,
+                result_path=result_path,
+            )
             result_refs.append(result_path)
+            review_ref: str | None = None
             if result.get("requires_human_review"):
                 review_info = eyes_review_gate.emit_review_required(
                     result,
@@ -348,12 +422,38 @@ def run_batch(
                     root=paths.root,
                     notify=notify_reviews,
                 )
-                review_refs.append(str(review_info["review_ref"]))
+                review_ref = str(review_info["review_ref"])
+                review_refs.append(review_ref)
+                claimed_payload = _attach_review_ref(
+                    completed_queue_path,
+                    claimed_payload,
+                    review_ref,
+                )
+                eyes_worker_runtime.record_review_required(
+                    run_handle,
+                    claimed_payload,
+                    review_ref=review_ref,
+                )
             completed += 1
+            eyes_worker_runtime.record_item_completed(
+                run_handle,
+                claimed_payload,
+                result_ref=result_path,
+                review_ref=review_ref,
+            )
         except Exception as exc:  # noqa: BLE001
             _fail_item(paths, claimed_path, claimed_payload, exc)
             failed += 1
+            eyes_worker_runtime.record_item_failed(
+                run_handle,
+                claimed_payload,
+                error_text=repr(exc),
+            )
 
+    eyes_worker_runtime.finalize_run(
+        run_handle,
+        status="completed" if failed == 0 else "failed",
+    )
     return WorkerRunSummary(
         processed=processed,
         completed=completed,
@@ -361,12 +461,13 @@ def run_batch(
         idle=processed == 0,
         result_refs=result_refs,
         review_refs=review_refs,
+        run_id=str(run_handle.checkpoint["run_id"]),
     )
 
 
 def status_snapshot(root: str | Path | None = None) -> dict[str, int | str]:
     paths = ensure_layout(root)
-    return {
+    snapshot: dict[str, int | str] = {
         "root": str(paths.root),
         "queue_pending": len(list(paths.queue_pending.glob("*.json"))),
         "queue_claimed": len(list(paths.queue_claimed.glob("*.json"))),
@@ -377,7 +478,10 @@ def status_snapshot(root: str | Path | None = None) -> dict[str, int | str]:
         "latest_review": str(paths.latest_review)
         if paths.latest_review.exists()
         else "",
+        "stale_claims": _stale_claims(paths, stale_after_seconds=900),
     }
+    snapshot.update(eyes_worker_runtime.journal_snapshot(paths.root))
+    return snapshot
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -407,6 +511,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Create review-required artifacts without posting local notifications.",
     )
+
+    recover = subparsers.add_parser(
+        "recover", help="Reconcile stale claimed queue items after a crash or kill."
+    )
+    recover.add_argument("--stale-after-seconds", type=int, default=900)
+    recover.add_argument(
+        "--no-notify",
+        action="store_true",
+        help="Do not post local notifications while recreating review artifacts.",
+    )
     return parser
 
 
@@ -432,12 +546,34 @@ def main(argv: list[str] | None = None) -> int:
         print(
             json.dumps(
                 {
+                    "run_id": summary.run_id,
                     "processed": summary.processed,
                     "completed": summary.completed,
                     "failed": summary.failed,
                     "idle": summary.idle,
                     "result_refs": summary.result_refs,
                     "review_refs": summary.review_refs,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return 0
+
+    if args.command == "recover":
+        summary = recover_stale_claims(
+            args.root,
+            stale_after_seconds=args.stale_after_seconds,
+            notify_reviews=not args.no_notify,
+        )
+        print(
+            json.dumps(
+                {
+                    "inspected": summary.inspected,
+                    "requeued": summary.requeued,
+                    "completed": summary.completed,
+                    "skipped": summary.skipped,
+                    "recovered_run_ids": summary.recovered_run_ids,
                 },
                 indent=2,
                 sort_keys=True,

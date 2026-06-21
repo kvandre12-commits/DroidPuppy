@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/eyes_worker_run_event.schema.json",
+  "title": "EyesWorkerRunEvent",
+  "description": "Append-only event record for eyes worker execution and recovery steps.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "event_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "worker_name": { "type": "string" },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "run_started",
+        "item_claimed",
+        "result_written",
+        "review_required",
+        "item_completed",
+        "item_failed",
+        "run_completed",
+        "run_failed",
+        "run_recovered",
+        "claim_requeued",
+        "claim_completed"
+      ]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "queue_item_id": { "type": ["string", "null"] },
+    "artifact_id": { "type": ["string", "null"] },
+    "result_ref": { "type": ["string", "null"] },
+    "review_ref": { "type": ["string", "null"] },
+    "details": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "contract_version",
+    "event_id",
+    "run_id",
+    "worker_name",
+    "event_type",
+    "created_at",
+    "queue_item_id",
+    "artifact_id",
+    "result_ref",
+    "review_ref",
+    "details"
+  ],
+  "additionalProperties": false
+}

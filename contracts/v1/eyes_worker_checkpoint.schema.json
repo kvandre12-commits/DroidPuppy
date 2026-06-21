@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/eyes_worker_checkpoint.schema.json",
+  "title": "EyesWorkerCheckpoint",
+  "description": "Durable checkpoint for one short-lived eyes worker run so Android kill/restart can reconcile the exact failure edge.",
+  "type": "object",
+  "properties": {
+    "contract_version": { "const": "1.0.0" },
+    "run_id": { "type": "string" },
+    "worker_name": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["running", "completed", "failed", "recovered"]
+    },
+    "started_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "max_items": { "type": "integer", "minimum": 1 },
+    "processed": { "type": "integer", "minimum": 0 },
+    "completed": { "type": "integer", "minimum": 0 },
+    "failed": { "type": "integer", "minimum": 0 },
+    "current_queue_item_id": { "type": ["string", "null"] },
+    "current_claim_ref": { "type": ["string", "null"] },
+    "current_phase": { "type": ["string", "null"] },
+    "current_result_ref": { "type": ["string", "null"] },
+    "current_review_ref": { "type": ["string", "null"] },
+    "last_error": { "type": ["string", "null"] },
+    "result_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "review_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": [
+    "contract_version",
+    "run_id",
+    "worker_name",
+    "status",
+    "started_at",
+    "updated_at",
+    "completed_at",
+    "max_items",
+    "processed",
+    "completed",
+    "failed",
+    "current_queue_item_id",
+    "current_claim_ref",
+    "current_phase",
+    "current_result_ref",
+    "current_review_ref",
+    "last_error",
+    "result_refs",
+    "review_refs"
+  ],
+  "additionalProperties": false
+}

@@ -58,6 +58,8 @@ queue/claimed/    queue items temporarily claimed by a worker
 queue/completed/  queue items that produced a result
 queue/failed/     queue items that failed during worker execution
 results/          validated EyesWorkerResult JSON
+journal/events/   append-only worker execution/recovery event artifacts
+journal/runs/     durable worker checkpoints (active/completed/failed/recovered)
 review/pending/   review-required artifacts waiting for a human
 review/approved/  review artifacts that were explicitly approved
 review/rejected/  review artifacts that were explicitly rejected
@@ -75,6 +77,8 @@ Supplemental v1 contracts:
 
 - `contracts/v1/eyes_artifact.schema.json`
 - `contracts/v1/eyes_queue_item.schema.json`
+- `contracts/v1/eyes_worker_checkpoint.schema.json`
+- `contracts/v1/eyes_worker_run_event.schema.json`
 
 These are not replacements for the core five Orchestra contracts. They are a
 bounded local intake seam that can later feed larger workflows.
@@ -110,6 +114,7 @@ Headless worker + scheduler plugin:
 - `android_eyes_worker_doctor`
 - `android_eyes_worker_status`
 - `android_eyes_worker_run_once`
+- `android_eyes_worker_recover`
 - `android_eyes_worker_schedule`
 - `android_eyes_worker_list_jobs`
 - `android_eyes_worker_cancel_job`
@@ -119,6 +124,7 @@ Repo-local worker scripts:
 ```bash
 python scripts/eyes_queue_worker.py status
 python scripts/eyes_queue_worker.py run-once --max-items 1
+python scripts/eyes_queue_worker.py recover --stale-after-seconds 900
 python scripts/eyes_tick.py --max-items 1
 python scripts/eyes_review_gate.py --list-pending
 python scripts/eyes_review_gate.py --approve <review_id> --decided-by butcher
@@ -153,6 +159,10 @@ The current worker slice stays deterministic and bounded: it produces typed
 result artifacts, updates queue status, emits a minimal `review_required` gate
 artifact when human review is needed, and exits instead of clinging to life in a
 background loop until Android strangles it.
+
+It now also writes a durable per-run checkpoint plus append-only execution
+journal events so a later `recover` pass can reconcile stale claimed queue items
+instead of shrugging at a dead terminal.
 
 ## Why this matters
 

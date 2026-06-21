@@ -139,6 +139,7 @@ def android_eyes_worker_doctor(root: str = "") -> dict[str, Any]:
         },
         "capabilities": {
             "run_once": bool(queue_worker),
+            "recover": bool(queue_worker),
             "scheduled_tick": bool(queue_worker and tick_script and scheduler),
             "review_notifications": bool(shutil.which("termux-notification")),
             "list_jobs": bool(scheduler),
@@ -146,6 +147,7 @@ def android_eyes_worker_doctor(root: str = "") -> dict[str, Any]:
         },
         "guidance": [
             "Use android_eyes_worker_run_once for an immediate bounded pass.",
+            "Use android_eyes_worker_recover if Android killed a worker mid-claim.",
             "Use android_eyes_worker_schedule to install a Termux scheduler tick.",
             "Keep workers one-shot and short-lived; Android punishes fake daemons.",
         ],
@@ -202,10 +204,47 @@ def android_eyes_worker_run_once(
         if not notify_reviews:
             command.append("--no-notify")
     result = _run_command(command, timeout=60)
+    parsed = None
+    if result.get("exit_code") == 0 and result.get("stdout"):
+        try:
+            parsed = json.loads(str(result["stdout"]))
+        except json.JSONDecodeError:
+            parsed = None
     return {
         "success": result.get("exit_code") == 0,
         "command": command,
         "result": result,
+        "summary": parsed,
+    }
+
+
+def android_eyes_worker_recover(
+    root: str = "",
+    stale_after_seconds: int = 900,
+    notify_reviews: bool = False,
+) -> dict[str, Any]:
+    """Reconcile stale claimed queue items after a crash or Android kill."""
+    worker_script = _resolve_script("eyes_queue_worker.py")
+    if worker_script is None:
+        return {"success": False, "message": "eyes_queue_worker.py was not found."}
+    command = [sys.executable, str(worker_script)]
+    if root.strip():
+        command.extend(["--root", str(_resolve_root(root))])
+    command.extend(["recover", "--stale-after-seconds", str(stale_after_seconds)])
+    if not notify_reviews:
+        command.append("--no-notify")
+    result = _run_command(command, timeout=60)
+    parsed = None
+    if result.get("exit_code") == 0 and result.get("stdout"):
+        try:
+            parsed = json.loads(str(result["stdout"]))
+        except json.JSONDecodeError:
+            parsed = None
+    return {
+        "success": result.get("exit_code") == 0,
+        "command": command,
+        "result": result,
+        "recovery": parsed,
     }
 
 
@@ -324,6 +363,13 @@ def android_eyes_worker_examples() -> dict[str, Any]:
                 "example_args": {
                     "scan_first": True,
                     "max_items": 1,
+                },
+            },
+            {
+                "name": "recover_stale_claims",
+                "example_args": {
+                    "stale_after_seconds": 900,
+                    "notify_reviews": False,
                 },
             },
             {

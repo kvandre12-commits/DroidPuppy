@@ -50,6 +50,8 @@ Current supplemental intake seam:
 | `v1/eyes_artifact.schema.json` | Validated manifest for manually surfaced local evidence dropped into the eyes inbox |
 | `v1/eyes_queue_item.schema.json` | Routed queue item created from an eyes inbox artifact for downstream workers |
 | `v1/eyes_worker_result.schema.json` | Typed result artifact emitted by a one-shot local worker after consuming a queue item |
+| `v1/eyes_worker_checkpoint.schema.json` | Durable per-run checkpoint so a killed worker can be reconciled without guessing |
+| `v1/eyes_worker_run_event.schema.json` | Append-only execution/recovery event log for one-shot worker runs |
 | `v1/eyes_review_required.schema.json` | Minimal governance-gate artifact telling the operator a human review is required |
 | `v1/eyes_execution_lease.schema.json` | Short-lived execution lease minted only after explicit operator approval |
 | `v1/eyes_audit_event.schema.json` | Immutable-ish decision event with original review snapshot and SHA-256 chain pointer |

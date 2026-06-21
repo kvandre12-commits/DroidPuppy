@@ -63,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
                     }
                 ),
                 "worker": {
+                    "run_id": worker_summary.run_id,
                     "processed": worker_summary.processed,
                     "completed": worker_summary.completed,
                     "failed": worker_summary.failed,
