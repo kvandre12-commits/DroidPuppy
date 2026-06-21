@@ -154,6 +154,147 @@ lane:
 - `scripts/eyes_tick.py` = one-shot scan + consume scheduler target
 - `android_eyes_worker_kit` = Android/agent-facing wrapper around run/schedule/list/cancel
 
+## Android-native execution rules
+
+The remaining discipline is not conceptual. It is operational.
+
+Android is not a polite little server. It will kill background work, squeeze RAM,
+and hide failures unless the runtime behaves like a mobile system on purpose.
+
+### Foreground owns the human gateway
+
+The following belongs in the foreground or in an explicit operator session:
+
+- CLI / chat / terminal control
+- initial environment checks and doctor flows
+- permission and setup gates
+- high-context heavy-planning turns
+- explicit approval / rejection decisions
+
+The heavy planner should be short-lived and wake on demand. Do not pretend a
+full-fat LLM session deserves to squat in RAM forever.
+
+### Background owns bounded work
+
+The following can detach into event-driven one-shot work:
+
+- queue consumption
+- local indexing / embeddings
+- passive telemetry collection
+- cleanup / maintenance tasks
+- deterministic artifact transforms
+
+The Android-safe rule is:
+
+```text
+short-lived worker in
+-> one bounded artifact consumed
+-> one typed result / observation written
+-> worker exits
+```
+
+That is safer than a fake immortal loop that lives exactly until Android gets
+bored and strangles it.
+
+### Persistence posture beats optimism
+
+Long-lived behavior on Android should assume at least one of these is needed:
+
+- `termux-job-scheduler` style wakeups
+- explicit battery-optimization exemptions
+- foreground-service style persistence where a native Android wrapper exists
+- frequent checkpoint writes to local storage
+
+Do not treat a background shell surviving yesterday as architecture.
+That is just a lucky anecdote wearing a fake beard.
+
+## Review boundary vs auto-run boundary
+
+### Human review should gate
+
+- destructive shell commands
+- non-sandbox file mutation
+- package installation or environment mutation
+- edits to core prompts / behavioral rules
+- high-effect Android intents or browser actions outside approved lease scope
+- loops that exceed iteration, retry, or token-budget thresholds
+
+### Auto-run is fine for
+
+- passive device-state reads
+- queue ingestion
+- deterministic low-risk maintenance
+- support telemetry and health checks
+- artifact validation and routing
+
+This matches the existing governance trail:
+
+```text
+Review Required -> Operator Decision -> Audit Event -> Lease -> later bounded effect
+```
+
+## Success, failure, and reconciliation
+
+Success should not mean "the model sounded confident." It should mean:
+
+- the selected tool actually executed
+- the tool returned schema-valid structured data
+- the result artifact was written durably
+- the system reconciled that the intended state change happened
+
+Failure on Android includes boring ugly things, not just thrown exceptions:
+
+- LMK / OOM process death mid-turn
+- context overrun without graceful truncation
+- malformed tool-call payloads or hallucinated tools
+- silent partial execution with no durable result artifact
+
+The runtime therefore needs a dedicated execution journal or equivalent durable
+trace. If a process dies mid-step, the next wakeup should be able to answer:
+
+- what queue item was active
+- which step started
+- whether the effect fired
+- whether a result artifact was written
+- whether a human review is now required
+
+## Memory model on Android
+
+Short-term state should be serialized aggressively:
+
+- current task / queue item
+- intermediate step outputs
+- retry counters
+- active constraints / lease context
+- last successful checkpoint
+
+Long-term state should persist as stable local knowledge:
+
+- tool schemas and capability routes
+- known-good device limits and RAM/context ceilings
+- user preferences and approved operating habits
+- durable failure signatures and recovery hints
+
+SQLite and JSON both already exist in the doctrine. Use the cheap substrate that
+fits the worker class; do not build an unnecessary state cathedral for a one-shot
+script.
+
+## Observability rule
+
+On Android, terminal visibility is not trustworthy enough to count as
+observability.
+
+The runtime must continuously flush execution state to local durable storage so a
+reboot or kill can reconcile the exact failure edge. In practice that means:
+
+- append-only or checkpointed local run logs
+- typed result / review / audit artifacts
+- resumable queue state
+- operator-visible status on next wakeup
+
+If the only record of progress lived in scrollback, then the system did not
+really observe itself. It just had thoughts near a terminal.
+
 ## Short answer
 
 The proposal fits the long-term kennels very well.
