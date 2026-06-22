@@ -71,6 +71,15 @@ Adds a friendly front door so you can think in commands like:
 - `open developer options`
 - `open https://example.com`
 
+### `droidpuppy_android_native`
+Adds the first Android-native Project OS bridge contracts and tools:
+`android.capabilities.v1` hardware/security/media probing,
+`android.event_bridge.v1` JSONL/bus publication, and
+`android.approval_receipt.v1` approval receipts and deterministic local receipt
+verification. The Termux bridge uses a local development signature and explicitly
+marks that a native Android Keystore signer is still required for hardware-backed
+authority.
+
 ### `droidpuppy_doctor`
 A single master health check for the whole stack: platform, core Android
 commands, adb, browsers, optional CDP probe, and a self-inventory of every

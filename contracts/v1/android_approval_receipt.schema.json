@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/android_approval_receipt.schema.json",
+  "title": "AndroidApprovalReceiptV1",
+  "description": "Canonical receipt proving a DroidPuppy operator or Android-native authority bridge approved a capability-scoped action.",
+  "type": "object",
+  "properties": {
+    "schema_version": { "const": "android.approval_receipt.v1" },
+    "receipt": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "const": "android.approval_receipt.v1" },
+        "receipt_id": { "type": "string", "minLength": 1 },
+        "issued_at": { "type": "string", "format": "date-time" },
+        "principal_id": { "type": "string", "minLength": 1 },
+        "capability": { "type": "string", "minLength": 1 },
+        "action": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "risk_tier": { "type": "string", "minLength": 1 },
+        "ttl_seconds": { "type": "integer", "minimum": 1 },
+        "nonce": { "type": "string", "minLength": 1 }
+      },
+      "required": [
+        "schema_version",
+        "receipt_id",
+        "issued_at",
+        "principal_id",
+        "capability",
+        "action",
+        "reason",
+        "risk_tier",
+        "ttl_seconds",
+        "nonce"
+      ],
+      "additionalProperties": false
+    },
+    "canonical_json": { "type": "string", "minLength": 1 },
+    "canonical_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "signature": {
+      "type": "object",
+      "properties": {
+        "algorithm": { "type": "string", "minLength": 1 },
+        "backend": { "type": "string", "minLength": 1 },
+        "hardware_backed": { "type": "boolean" },
+        "value": { "type": "string", "minLength": 1 },
+        "native_keystore_bridge_required": { "type": "boolean" }
+      },
+      "required": [
+        "algorithm",
+        "backend",
+        "hardware_backed",
+        "value",
+        "native_keystore_bridge_required"
+      ],
+      "additionalProperties": false
+    },
+    "verification_hint": { "type": "string" }
+  },
+  "required": [
+    "schema_version",
+    "receipt",
+    "canonical_json",
+    "canonical_sha256",
+    "signature",
+    "verification_hint"
+  ],
+  "additionalProperties": false
+}

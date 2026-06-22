@@ -1,10 +1,10 @@
 # DroidPuppy Plugin Reference
 
 > Auto-generated inventory of every DroidPuppy plugin and its tools.
-> Last generated: 2026-06-20. Regenerate with `python scripts/gen_plugin_reference.py`.
+> Last generated: 2026-06-21. Regenerate with `python scripts/gen_plugin_reference.py`.
 > Descriptions marked _(derived)_ were synthesized from the tool name (the source had no docstring — a good first contribution target).
 
-**37 plugins · 126 tools**
+**38 plugins · 131 tools**
 
 ## Index
 
@@ -22,7 +22,7 @@
 - [`android_dumpsys_kit`](#android-dumpsys-kit) — Register Android dumpsys kit tools. (3 tools)
 - [`android_edge_kit`](#android-edge-kit) — Register DroidPuppy 'edge' element-testing tools. (2 tools)
 - [`android_eyes_inbox_kit`](#android-eyes-inbox-kit) — Register Android eyes inbox tools. (8 tools)
-- [`android_eyes_worker_kit`](#android-eyes-worker-kit) — Register Android eyes worker tools. (7 tools)
+- [`android_eyes_worker_kit`](#android-eyes-worker-kit) — Register Android eyes worker tools. (8 tools)
 - [`android_friendly_router`](#android-friendly-router) — Register friendly Android router tools. (2 tools)
 - [`android_handoff_kit`](#android-handoff-kit) — Register Android handoff tools. (5 tools)
 - [`android_input_kit`](#android-input-kit) — Register Android input kit tools. (6 tools)
@@ -44,6 +44,7 @@
 - [`android_utility_kit`](#android-utility-kit) — Register Android utility kit tools. (5 tools)
 - [`android_workflow_feasibility_kit`](#android-workflow-feasibility-kit) — Register workflow feasibility assessment tools. (3 tools)
 - [`android_workflow_macro_kit`](#android-workflow-macro-kit) — Register Android workflow macro tools. (3 tools)
+- [`droidpuppy_android_native`](#droidpuppy-android-native) — Register DroidPuppy Android-native surface tools. (4 tools)
 - [`droidpuppy_doctor`](#droidpuppy-doctor) — Register the DroidPuppy master doctor tool. (1 tools)
 
 ---
@@ -201,6 +202,7 @@ Register Android eyes worker tools.
 | `android_eyes_worker_doctor` | Inspect eyes worker readiness, scripts, and scheduler capability. |
 | `android_eyes_worker_status` | Run the local queue worker status command and return its JSON output. |
 | `android_eyes_worker_run_once` | Run one short-lived worker pass, optionally scanning inbox first. |
+| `android_eyes_worker_recover` | Reconcile stale claimed queue items after a crash or Android kill. |
 | `android_eyes_worker_schedule` | Create a Termux scheduler wrapper for the eyes worker tick. |
 | `android_eyes_worker_list_jobs` | List pending Termux scheduler jobs. |
 | `android_eyes_worker_cancel_job` | Cancel one scheduled eyes worker job by Termux job id. |
@@ -423,6 +425,17 @@ Register Android workflow macro tools.
 | `android_workflow_doctor` | Workflow doctor _(derived)_ |
 | `android_workflow_list` | Workflow list _(derived)_ |
 | `android_workflow_run` | Workflow run _(derived)_ |
+
+## droidpuppy_android_native
+
+Register DroidPuppy Android-native surface tools.
+
+| Tool | Description |
+|------|-------------|
+| `droidpuppy_android_capabilities` | Probe Android-native hardware/security/media/event surfaces. |
+| `droidpuppy_android_event_publish` | Append an ``android.event_bridge.v1`` event and best-effort publish it. |
+| `droidpuppy_android_approval_receipt` | Create an ``android.approval_receipt.v1`` development receipt. |
+| `droidpuppy_android_verify_approval_receipt` | Verify an ``android.approval_receipt.v1`` development receipt. |
 
 ## droidpuppy_doctor
 

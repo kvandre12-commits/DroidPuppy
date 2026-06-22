@@ -55,6 +55,9 @@ Current supplemental intake seam:
 | `v1/eyes_review_required.schema.json` | Minimal governance-gate artifact telling the operator a human review is required |
 | `v1/eyes_execution_lease.schema.json` | Short-lived execution lease minted only after explicit operator approval |
 | `v1/eyes_audit_event.schema.json` | Immutable-ish decision event with original review snapshot and SHA-256 chain pointer |
+| `v1/android_capabilities.schema.json` | Read-only report of Android-native hardware, media, graphics, security, and command surfaces |
+| `v1/android_event_bridge.schema.json` | Append-only event envelope for Android-native facts flowing into Project OS |
+| `v1/android_approval_receipt.schema.json` | Canonical approval receipt envelope for capability-scoped Android/operator authority |
 | `v2/eyes_execution_lease.schema.json` | Principal-bound, capability-scoped lease with quotas and runtime constraints |
 | `v2/eyes_audit_event.schema.json` | Shared authority event contract for review decisions, lease lifecycle, breaker trips, and containment telemetry |
 

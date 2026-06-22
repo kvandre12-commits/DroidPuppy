@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.system/contracts/v1/android_capabilities.schema.json",
+  "title": "AndroidCapabilitiesV1",
+  "description": "Read-only DroidPuppy report describing Android-native hardware, media, security, and command surfaces.",
+  "type": "object",
+  "properties": {
+    "schema_version": { "const": "android.capabilities.v1" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "device": {
+      "type": "object",
+      "properties": {
+        "manufacturer": { "type": "string" },
+        "model": { "type": "string" },
+        "platform": { "type": "string" },
+        "hardware": { "type": "string" },
+        "soc_manufacturer": { "type": "string" },
+        "soc_model": { "type": "string" },
+        "abi": { "type": "string" },
+        "android_version": { "type": "string" },
+        "sdk": { "type": "string" }
+      },
+      "required": [
+        "manufacturer",
+        "model",
+        "platform",
+        "hardware",
+        "soc_manufacturer",
+        "soc_model",
+        "abi",
+        "android_version",
+        "sdk"
+      ],
+      "additionalProperties": false
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "services": { "type": "array", "items": { "type": "string" } },
+        "keystore_hardware": { "type": "string" },
+        "keystore_key_types": { "type": "array", "items": { "type": "string" } },
+        "keystore_service_visible": { "type": "boolean" },
+        "gatekeeper_service_visible": { "type": "boolean" },
+        "hardware_backed_python_signing_available": { "type": "boolean" },
+        "native_keystore_bridge_required": { "type": "boolean" }
+      },
+      "required": [
+        "services",
+        "keystore_hardware",
+        "keystore_key_types",
+        "keystore_service_visible",
+        "gatekeeper_service_visible",
+        "hardware_backed_python_signing_available",
+        "native_keystore_bridge_required"
+      ],
+      "additionalProperties": false
+    },
+    "media": {
+      "type": "object",
+      "properties": {
+        "services": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["services"],
+      "additionalProperties": false
+    },
+    "graphics": {
+      "type": "object",
+      "properties": {
+        "gpu_hints": { "type": "array", "items": { "type": "string" } },
+        "adreno_or_qualcomm_likely": { "type": "boolean" }
+      },
+      "required": ["gpu_hints", "adreno_or_qualcomm_likely"],
+      "additionalProperties": false
+    },
+    "capability_flags": {
+      "type": "object",
+      "properties": {
+        "android_native_available": { "type": "boolean" },
+        "arm64": { "type": "boolean" },
+        "qualcomm_family": { "type": "boolean" },
+        "hardware_keystore_service_visible": { "type": "boolean" },
+        "gatekeeper_service_visible": { "type": "boolean" },
+        "media_services_visible": { "type": "boolean" },
+        "gpu_hints_visible": { "type": "boolean" }
+      },
+      "required": [
+        "android_native_available",
+        "arm64",
+        "qualcomm_family",
+        "hardware_keystore_service_visible",
+        "gatekeeper_service_visible",
+        "media_services_visible",
+        "gpu_hints_visible"
+      ],
+      "additionalProperties": false
+    },
+    "recommended_lanes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "trust_lane",
+          "trust_lane_probe_native_bridge_needed",
+          "event_lane",
+          "survival_lane",
+          "perception_lane",
+          "acceleration_lane"
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "timestamp",
+    "device",
+    "commands",
+    "security",
+    "media",
+    "graphics",
+    "capability_flags",
+    "recommended_lanes"
+  ],
+  "additionalProperties": true
+}
