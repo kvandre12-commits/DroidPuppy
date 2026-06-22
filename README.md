@@ -4,6 +4,10 @@
 
 DroidPuppy is a focused plugin bundle for making Code Puppy feel at home on Android.
 It is the beginning of an **Android-native agent operating layer**: a phone-first control surface for apps, settings, browsers, workflows, and agent-driven mobile actions.
+
+> **Simple split:** Code Puppy is the open-source engine. DroidPuppy is the Android-native overlay.
+> Install upstream Code Puppy first, then layer DroidPuppy on top with the light installer in this repo.
+
 It turns a phone running Termux into a more capable mobile workstation with:
 
 - Android app launching and settings routing
@@ -81,7 +85,7 @@ next steps.
 
 1. Install Code Puppy from Mike's upstream however you like (`uvx`, `pip`, or a git checkout).
 2. Clone this repo.
-3. Install the overlay into Code Puppy's user plugin tier:
+3. Run DroidPuppy's light installer to place the overlay into Code Puppy's user plugin tier:
 
 ```bash
 python scripts/install_overlay.py
@@ -110,6 +114,7 @@ python scripts/install_overlay.py --mode symlink --overwrite
 For a fuller setup guide, see:
 
 - [`docs/INSTALL.md`](docs/INSTALL.md)
+- [`docs/UPSTREAM_ENGINE_AND_OVERLAY.md`](docs/UPSTREAM_ENGINE_AND_OVERLAY.md) — why this stays in DroidPuppy instead of bloating upstream
 - [`docs/PLUGIN_OVERVIEW.md`](docs/PLUGIN_OVERVIEW.md)
 - [`docs/PLUGIN_REFERENCE.md`](docs/PLUGIN_REFERENCE.md) — full auto-generated tool index
 - [`docs/DEVELOPER_TOOLS.md`](docs/DEVELOPER_TOOLS.md)

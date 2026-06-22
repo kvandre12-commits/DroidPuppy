@@ -175,6 +175,24 @@ def test_install_plugins_rejects_missing_entrypoint(tmp_path):
         install_overlay.install_plugins([broken], target, mode="copy")
 
 
+def test_print_summary_points_to_doctor_and_docs(capsys, tmp_path):
+    install_overlay._print_summary(
+        [
+            install_overlay.InstallResult(
+                plugin="android_brave_bridge",
+                status="installed",
+                destination=tmp_path / "plugins" / "android_brave_bridge",
+            )
+        ],
+        tmp_path / "plugins",
+        dry_run=False,
+    )
+
+    output = capsys.readouterr().out
+    assert "Run the DroidPuppy doctor tool" in output
+    assert "docs/UPSTREAM_ENGINE_AND_OVERLAY.md" in output
+
+
 def test_copied_plugin_is_loader_compatible(tmp_path):
     source_root = tmp_path / "source"
     source_plugin = source_root / "demo_plugin"

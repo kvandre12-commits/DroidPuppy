@@ -35,6 +35,21 @@ Project OS doctrine
 
 ## What Project OS means in practice
 
+### 0. Same-day install path stays upstream-first
+
+Project OS should not require mutating Mike's repo or carrying a permanent fork
+for the Android product layer.
+
+The clean path is:
+
+1. install upstream Code Puppy
+2. clone DroidPuppy
+3. run the light installer (`python scripts/install_overlay.py`)
+4. let Code Puppy's plugin tiers load the Android-native overlay
+
+That keeps the engine lean, keeps ownership clean, and makes the phone-native
+layer portable.
+
 ### 1. Repo boundaries stay real
 
 - Code Puppy owns the general engine.

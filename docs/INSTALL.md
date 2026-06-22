@@ -5,6 +5,10 @@
 DroidPuppy is meant to layer on top of **Mike's upstream Code Puppy install**
 without editing site-packages or mutating the upstream checkout.
 
+This is the **light installer** path: keep the engine upstream, keep the
+Android-native product layer here, and connect them through Code Puppy's plugin
+contract instead of repo-sprawl goblinry.
+
 The preferred install target is Code Puppy's **user plugin tier**:
 
 ```text
@@ -26,6 +30,8 @@ that expose a loadable `register_callbacks.py` entrypoint.
 ```bash
 python scripts/install_overlay.py
 ```
+
+That script is the light installer for the DroidPuppy overlay.
 
 That copies every DroidPuppy plugin in this repo into:
 
@@ -65,6 +71,8 @@ python scripts/install_overlay.py --list
 ```
 
 The full plugin/tool catalog lives in [`PLUGIN_REFERENCE.md`](PLUGIN_REFERENCE.md).
+For the engine/overlay framing, read
+[`UPSTREAM_ENGINE_AND_OVERLAY.md`](UPSTREAM_ENGINE_AND_OVERLAY.md).
 
 ### Verify the stack after install
 

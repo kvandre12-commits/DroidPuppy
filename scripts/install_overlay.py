@@ -212,7 +212,10 @@ def _print_summary(
         print("  1. Start Code Puppy from Mike's upstream install/checkout.")
         print("  2. Run the DroidPuppy doctor tool to verify Android readiness.")
         print(
-            "  3. If you want CDP browser control, install adb: pkg install android-tools"
+            "  3. Read README.md and docs/UPSTREAM_ENGINE_AND_OVERLAY.md in this repo for the engine/overlay split."
+        )
+        print(
+            "  4. If you want CDP browser control, install adb: pkg install android-tools"
         )
 
 
