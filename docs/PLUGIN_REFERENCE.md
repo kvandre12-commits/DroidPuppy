@@ -1,10 +1,10 @@
 # DroidPuppy Plugin Reference
 
 > Auto-generated inventory of every DroidPuppy plugin and its tools.
-> Last generated: 2026-06-21. Regenerate with `python scripts/gen_plugin_reference.py`.
+> Last generated: 2026-06-22. Regenerate with `python scripts/gen_plugin_reference.py`.
 > Descriptions marked _(derived)_ were synthesized from the tool name (the source had no docstring — a good first contribution target).
 
-**38 plugins · 131 tools**
+**39 plugins · 140 tools**
 
 ## Index
 
@@ -46,6 +46,7 @@
 - [`android_workflow_macro_kit`](#android-workflow-macro-kit) — Register Android workflow macro tools. (3 tools)
 - [`droidpuppy_android_native`](#droidpuppy-android-native) — Register DroidPuppy Android-native surface tools. (4 tools)
 - [`droidpuppy_doctor`](#droidpuppy-doctor) — Register the DroidPuppy master doctor tool. (1 tools)
+- [`droidpuppy_operational_world`](#droidpuppy-operational-world) — Register DroidPuppy operational-world tools. (9 tools)
 
 ---
 
@@ -444,4 +445,20 @@ Register the DroidPuppy master doctor tool.
 | Tool | Description |
 |------|-------------|
 | `droidpuppy_doctor` | Run a full DroidPuppy stack health check (platform, commands, browsers, plugins). |
+
+## droidpuppy_operational_world
+
+Register DroidPuppy operational-world tools.
+
+| Tool | Description |
+|------|-------------|
+| `droidpuppy_world_doctor` | Inspect operational-world readiness and durable state files. |
+| `droidpuppy_world_init` | Initialize the operational world from a declarative JSON spec. |
+| `droidpuppy_world_submit_action` | Queue an operational-world action for the next tick. |
+| `droidpuppy_world_tick` | Advance the operational world one deterministic tick. |
+| `droidpuppy_world_perceive` | Return a viewer-filtered operational-world perception packet. |
+| `droidpuppy_world_scan_consequences` | Run the declarative consequence scanner against current state/events. |
+| `droidpuppy_world_reconcile_android` | Reconcile Android capability facts into operational-world entities. |
+| `droidpuppy_world_replay` | Replay stream.jsonl into a reconstructed operational-world state summary. |
+| `droidpuppy_world_examples` | Show operational-world usage examples. |
 

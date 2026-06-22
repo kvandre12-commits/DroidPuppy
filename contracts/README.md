@@ -58,6 +58,9 @@ Current supplemental intake seam:
 | `v1/android_capabilities.schema.json` | Read-only report of Android-native hardware, media, graphics, security, and command surfaces |
 | `v1/android_event_bridge.schema.json` | Append-only event envelope for Android-native facts flowing into Project OS |
 | `v1/android_approval_receipt.schema.json` | Canonical approval receipt envelope for capability-scoped Android/operator authority |
+| `v1/droidpuppy_world_spec.schema.json` | Declarative operational-world spec: entities, actions, perception filters, and consequences |
+| `v1/droidpuppy_world_state.schema.json` | Durable operational-world state: tick, entities, queued actions, processed actions, fired consequences |
+| `v1/droidpuppy_world_event.schema.json` | Append-only operational-world event envelope for replayable audit streams |
 | `v2/eyes_execution_lease.schema.json` | Principal-bound, capability-scoped lease with quotas and runtime constraints |
 | `v2/eyes_audit_event.schema.json` | Shared authority event contract for review decisions, lease lifecycle, breaker trips, and containment telemetry |
 

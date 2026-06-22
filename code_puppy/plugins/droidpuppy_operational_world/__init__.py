@@ -1,0 +1,1 @@
+"""DroidPuppy operational world plugin."""

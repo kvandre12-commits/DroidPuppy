@@ -80,6 +80,13 @@ verification. The Termux bridge uses a local development signature and explicitl
 marks that a native Android Keystore signer is still required for hardware-backed
 authority.
 
+### `droidpuppy_operational_world`
+Adds the operational-world spine: declarative JSON specs, durable world state,
+queued actions, deterministic ticks, perception-filtered views, consequence
+scanning, and append-only `stream.jsonl` audit replay. This is where DroidPuppy
+starts becoming a phone-side operations room instead of a fancy CLI wrapper.
+See [`docs/OPERATIONAL_WORLD.md`](docs/OPERATIONAL_WORLD.md).
+
 ### `droidpuppy_doctor`
 A single master health check for the whole stack: platform, core Android
 commands, adb, browsers, optional CDP probe, and a self-inventory of every
@@ -129,6 +136,7 @@ For a fuller setup guide, see:
 - [`docs/DEVELOPER_TOOLS.md`](docs/DEVELOPER_TOOLS.md)
 - [`docs/EYES_INBOX.md`](docs/EYES_INBOX.md) — local evidence intake for manual snapshots/exports
 - [`docs/HEADLESS_ORCHESTRATION_FIT.md`](docs/HEADLESS_ORCHESTRATION_FIT.md) — how short-lived planners, micro-workers, durable state, and Android triggers fit the existing Project OS trail
+- [`docs/OPERATIONAL_WORLD.md`](docs/OPERATIONAL_WORLD.md) — declarative specs, ticks, filtered perception, consequences, and replayable audit stream
 
 For the portfolio and stewardship story, see:
 
@@ -145,6 +153,7 @@ For the portfolio and stewardship story, see:
 - Click links, fill inputs, and capture screenshots
 - Drop text, URLs, and files into a local eyes inbox for later background processing
 - Run one-shot eyes workers, emit review-required artifacts, and schedule lightweight Termux wakeups for headless processing
+- Maintain an operational world with declarative specs, queued actions, deterministic ticks, perception filters, consequences, and replayable events
 
 ## Notes
 

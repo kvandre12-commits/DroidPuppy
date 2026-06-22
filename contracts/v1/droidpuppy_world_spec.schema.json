@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.local/contracts/v1/droidpuppy_world_spec.schema.json",
+  "title": "DroidPuppy World Spec",
+  "type": "object",
+  "required": ["schema_version", "world_id", "entities", "actions", "perception", "consequences"],
+  "properties": {
+    "schema_version": {"const": "droidpuppy.world_spec.v1"},
+    "world_id": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "entities": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/entity_seed"}
+    },
+    "actions": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/action_spec"}
+    },
+    "perception": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/perception_rule"}
+    },
+    "consequences": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/consequence_rule"}
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "json_object": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "entity_seed": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "type": {"type": "string", "minLength": 1},
+        "properties": {"$ref": "#/$defs/json_object"}
+      },
+      "additionalProperties": true
+    },
+    "action_spec": {
+      "type": "object",
+      "properties": {
+        "description": {"type": "string"},
+        "risk_tier": {
+          "type": "string",
+          "enum": ["read_only", "state_write", "external_write", "destructive", "review_required"]
+        },
+        "requires_approval": {"type": "boolean"},
+        "effects": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/effect"}
+        }
+      },
+      "additionalProperties": true
+    },
+    "effect": {
+      "type": "object",
+      "required": ["op"],
+      "properties": {
+        "op": {"type": "string", "enum": ["emit_event", "set_property", "create_entity"]},
+        "event_type": {"type": "string"},
+        "entity": {"type": "string"},
+        "entity_id": {"type": "string"},
+        "property": {"type": "string"},
+        "type": {"type": "string"},
+        "value": true,
+        "payload": {"$ref": "#/$defs/json_object"},
+        "properties": {"$ref": "#/$defs/json_object"}
+      },
+      "additionalProperties": true
+    },
+    "perception_rule": {
+      "type": "object",
+      "required": ["entity_types", "event_types", "hidden_properties"],
+      "properties": {
+        "entity_types": {"type": "array", "items": {"type": "string"}},
+        "event_types": {"type": "array", "items": {"type": "string"}},
+        "hidden_properties": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": true
+    },
+    "consequence_rule": {
+      "type": "object",
+      "required": ["id", "when", "emit"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "when": {"$ref": "#/$defs/json_object"},
+        "emit": {
+          "type": "object",
+          "required": ["event_type"],
+          "properties": {
+            "event_type": {"type": "string", "minLength": 1},
+            "payload": {"$ref": "#/$defs/json_object"}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

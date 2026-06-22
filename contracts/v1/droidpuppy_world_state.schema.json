@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.local/contracts/v1/droidpuppy_world_state.schema.json",
+  "title": "DroidPuppy World State",
+  "type": "object",
+  "required": ["schema_version", "world_id", "tick", "updated_at", "entities", "queued_actions"],
+  "properties": {
+    "schema_version": {"const": "droidpuppy.world_state.v1"},
+    "world_id": {"type": "string", "minLength": 1},
+    "tick": {"type": "integer", "minimum": 0},
+    "updated_at": {"type": "string"},
+    "entities": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/entity"}
+    },
+    "queued_actions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/action"}
+    },
+    "processed_action_ids": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "fired_consequence_keys": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "json_object": {"type": "object", "additionalProperties": true},
+    "entity": {
+      "type": "object",
+      "required": ["id", "type", "properties"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "type": {"type": "string", "minLength": 1},
+        "properties": {"$ref": "#/$defs/json_object"},
+        "created_at": {"type": "string"},
+        "updated_at": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "action": {
+      "type": "object",
+      "required": ["action_id", "actor", "action_type", "payload", "status", "created_at"],
+      "properties": {
+        "action_id": {"type": "string", "minLength": 1},
+        "actor": {"type": "string"},
+        "action_type": {"type": "string", "minLength": 1},
+        "target": {"type": "string"},
+        "payload": {"$ref": "#/$defs/json_object"},
+        "status": {"type": "string"},
+        "created_at": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  }
+}

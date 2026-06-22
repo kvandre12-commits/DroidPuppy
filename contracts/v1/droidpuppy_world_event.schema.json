@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sharpedge.local/contracts/v1/droidpuppy_world_event.schema.json",
+  "title": "DroidPuppy World Event",
+  "type": "object",
+  "required": ["schema_version", "event_id", "timestamp", "event_type", "source", "payload"],
+  "properties": {
+    "schema_version": {"const": "droidpuppy.world_event.v1"},
+    "event_id": {"type": "string", "minLength": 1},
+    "timestamp": {"type": "string"},
+    "event_type": {"type": "string", "minLength": 1},
+    "source": {"type": "string", "minLength": 1},
+    "payload": {"type": "object", "additionalProperties": true}
+  },
+  "additionalProperties": true
+}
