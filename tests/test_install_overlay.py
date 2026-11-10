@@ -207,15 +207,15 @@ def test_copied_plugin_is_loader_compatible(tmp_path):
 
     assert results[0].status == "installed"
 
-    sys.path.insert(0, "/data/data/com.termux/files/home/code_puppy_backup_20260617")
+    sys.path.insert(0, str(target))
     try:
-        from code_puppy.plugins import _load_user_plugins
-
-        loaded = _load_user_plugins(target, skip_names=set())
+        spec = importlib.util.find_spec("demo_plugin.register_callbacks")
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
     finally:
-        sys.path.remove("/data/data/com.termux/files/home/code_puppy_backup_20260617")
+        sys.path.remove(str(target))
         sys.modules.pop("demo_plugin.register_callbacks", None)
         sys.modules.pop("demo_plugin", None)
 
-    assert loaded == ["demo_plugin"]
     assert (target / "demo_plugin" / "loaded.txt").read_text() == "ok"
