@@ -230,6 +230,13 @@ def test_android_profile_excludes_unvalidated_native_dependencies():
     }
 
     assert len(requirements) == 88
+    assert all("==" in requirement for requirement in requirements)
+    assert {
+        "code-puppy==0.0.720",
+        "code-puppy-core-plugins==0.0.4",
+        "pydantic-ai-slim==1.56.0",
+        "anthropic==0.79.0",
+    } <= requirements
     assert not any("monty" in requirement for requirement in requirements)
     assert not any("tree-sitter" in requirement for requirement in requirements)
 
