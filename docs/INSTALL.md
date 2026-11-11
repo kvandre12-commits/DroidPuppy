@@ -34,14 +34,22 @@ This installs the complete stack:
 
 1. Termux's Python, Rust, Clang, Git, curl, ripgrep, and Pillow build support.
 2. Optional Android helpers (`adb` and Termux:API commands).
-3. Mike's released `code-puppy` engine in an isolated pipx environment.
-4. DroidPuppy plugins under `~/.code_puppy/plugins`.
-5. A final executable and plugin-count verification.
+3. The pinned `android-0720` engine profile in an isolated pipx environment.
+4. Code Puppy `0.0.720` through pipx's pip backend and the profile's exact
+   constraints file.
+5. DroidPuppy plugins under `~/.code_puppy/plugins`.
+6. A final executable and plugin-count verification.
 
-The first install may take 10–20 minutes because Android must compile native
+The installer verifies the constraints file by SHA-256 before using it. The
+profile excludes Monty/code mode and the mandatory Tree-sitter grammar bundle
+introduced by newer, unvalidated engine releases. It is currently a recovery
+candidate and must pass a clean-phone install before being advertised as a
+validated release.
+
+The first install may take 10–20 minutes because Android may compile native
 Python packages. Keep Termux open and the phone awake. The installer is
-idempotent: rerunning it refreshes the DroidPuppy overlay and preserves an
-already-installed engine version.
+idempotent: rerunning it refreshes the DroidPuppy overlay and **never mutates an
+already-installed engine**.
 
 Start the agent after installation:
 
@@ -63,8 +71,8 @@ curl -fsSL https://raw.githubusercontent.com/kvandre12-commits/DroidPuppy/main/i
 # Avoid optional ADB and Termux:API packages
 curl -fsSL https://raw.githubusercontent.com/kvandre12-commits/DroidPuppy/main/install.sh | bash -s -- --minimal
 
-# Upgrade a pipx-managed Code Puppy while refreshing DroidPuppy
-curl -fsSL https://raw.githubusercontent.com/kvandre12-commits/DroidPuppy/main/install.sh | bash -s -- --upgrade-engine
+# Select the known Android recovery profile explicitly (it is also the default)
+curl -fsSL https://raw.githubusercontent.com/kvandre12-commits/DroidPuppy/main/install.sh | bash -s -- --engine-profile android-0720
 ```
 
 ### Manual developer install
@@ -126,8 +134,13 @@ inventory.
 
 If `code-puppy` is not found immediately after a successful install, close and
 reopen Termux so its updated PATH is loaded, then run `code-puppy -i` again.
-Use the full installer again for repair; use `--upgrade-engine` only when you
-intend to update Code Puppy itself.
+Use the full installer again to refresh the DroidPuppy overlay. It deliberately
+has no generic upgrade switch: changing engine versions requires a separately
+reviewed and checksummed profile rather than an unbounded PyPI upgrade.
+
+If Code Puppy is already installed, the installer reports that fact and leaves
+its environment unchanged. Use `--skip-engine` when you explicitly want an
+overlay-only refresh; both paths preserve the existing engine.
 
 DroidPuppy is designed for Android devices running Termux.
 

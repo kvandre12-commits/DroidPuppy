@@ -6,7 +6,7 @@ DroidPuppy is a focused plugin bundle for making Code Puppy feel at home on Andr
 It is the beginning of an **Android-native agent operating layer**: a phone-first control surface for apps, settings, browsers, workflows, and agent-driven mobile actions.
 
 > **Simple split:** Code Puppy is the open-source engine. DroidPuppy is the Android-native overlay.
-> Install upstream Code Puppy first, then layer DroidPuppy on top with the light installer in this repo.
+> The phone installer uses an explicit Android engine profile, then layers DroidPuppy on top without modifying the engine.
 
 It turns a phone running Termux into a more capable mobile workstation with:
 
@@ -109,10 +109,15 @@ Open Termux and paste this single command:
 pkg install -y curl && curl -fsSL https://raw.githubusercontent.com/kvandre12-commits/DroidPuppy/main/install.sh | bash
 ```
 
-The installer sets up the Android build tools, Mike's upstream Code Puppy
-engine, optional ADB/Termux helpers, and the DroidPuppy plugins. It is safe to
-run again when repairing an install. The first run can take 10–20 minutes
-because Android compiles several native Python dependencies.
+The installer sets up the Android build tools, the pinned `android-0720`
+recovery profile, optional ADB/Termux helpers, and the DroidPuppy plugins. It
+verifies the engine constraints by SHA-256 and preserves any existing Code
+Puppy installation instead of upgrading it. The first run can take 10–20
+minutes because Android may compile native Python dependencies.
+
+The `android-0720` profile is currently a recovery candidate pending a clean
+second-phone validation. See [`docs/INSTALL.md`](docs/INSTALL.md) for its exact
+boundary and dry-run instructions.
 
 Then start it:
 
