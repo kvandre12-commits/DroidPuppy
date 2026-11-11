@@ -7,7 +7,9 @@ DROIDPUPPY_REF="${DROIDPUPPY_REF:-main}"
 DRY_RUN=0
 INSTALL_ENGINE=1
 INSTALL_OPTIONAL=1
-UPGRADE_ENGINE=0
+REPAIR_ENGINE=0
+ENGINE_PROFILE="android-0720"
+PIPX_SPEC="pipx==1.18.16"
 
 usage() {
     cat <<'EOF'
@@ -19,8 +21,10 @@ The installer is safe to rerun; DroidPuppy plugins are refreshed in place.
 Options:
   --dry-run        Print the installation plan without changing anything
   --skip-engine    Install only DroidPuppy (Code Puppy is already installed)
+  --repair-engine  Replace a broken pipx engine with the selected exact profile
   --minimal        Skip optional ADB and Termux:API command packages
-  --upgrade-engine Upgrade an existing pipx-managed Code Puppy installation
+  --engine-profile PROFILE
+                   Install a versioned engine profile (default: android-0720)
   -h, --help       Show this help
 EOF
 }
@@ -43,13 +47,31 @@ while [ "$#" -gt 0 ]; do
     case "$1" in
         --dry-run) DRY_RUN=1 ;;
         --skip-engine) INSTALL_ENGINE=0 ;;
+        --repair-engine) REPAIR_ENGINE=1 ;;
         --minimal) INSTALL_OPTIONAL=0 ;;
-        --upgrade-engine) UPGRADE_ENGINE=1 ;;
+        --engine-profile)
+            [ "$#" -ge 2 ] || fail "--engine-profile requires a profile name"
+            ENGINE_PROFILE="$2"
+            shift
+            ;;
         -h|--help) usage; exit 0 ;;
         *) fail "Unknown option: $1" ;;
     esac
     shift
 done
+
+if [ "$INSTALL_ENGINE" -ne 1 ] && [ "$REPAIR_ENGINE" -eq 1 ]; then
+    fail "--skip-engine and --repair-engine cannot be used together"
+fi
+
+case "$ENGINE_PROFILE" in
+    android-0720)
+        ENGINE_SPEC="code-puppy==0.0.720"
+        CONSTRAINTS_RELATIVE_PATH="constraints/android-0720.txt"
+        CONSTRAINTS_SHA256="f993c0fb29c26de681808c760caf9e4e54ad5b8e726cf5d134fd03e55873ae2a"
+        ;;
+    *) fail "Unknown engine profile: $ENGINE_PROFILE" ;;
+esac
 
 if [ "$DRY_RUN" -ne 1 ]; then
     command -v pkg >/dev/null 2>&1 || fail \
@@ -69,28 +91,12 @@ fi
 
 export PATH="$HOME/.local/bin:$PATH"
 
-if [ "$INSTALL_ENGINE" -eq 1 ]; then
-    say "Installing the Code Puppy engine"
-    run python -m pip install --user pipx
-    run python -m pipx ensurepath
-
-    if [ "$DRY_RUN" -eq 1 ]; then
-        run python -m pipx install code-puppy
-    elif command -v code-puppy >/dev/null 2>&1; then
-        if [ "$UPGRADE_ENGINE" -eq 1 ]; then
-            run python -m pipx upgrade code-puppy
-        else
-            say "Code Puppy is already installed; leaving its version unchanged"
-        fi
-    else
-        run python -m pipx install code-puppy
-    fi
-fi
-
-say "Installing the DroidPuppy capability overlay"
+say "Preparing the DroidPuppy source and engine profile"
 if [ "$DRY_RUN" -eq 1 ]; then
+    source_dir="\$WORK_DIR/DroidPuppy-$DROIDPUPPY_REF"
     printf '  Download %s/archive/%s.tar.gz\n' "$DROIDPUPPY_REPO" "$DROIDPUPPY_REF"
-    printf '  Install plugins into %s/.code_puppy/plugins\n' "$HOME"
+    printf '  Verify %s with SHA-256 %s\n' \
+        "$CONSTRAINTS_RELATIVE_PATH" "$CONSTRAINTS_SHA256"
 else
     work_dir="$(mktemp -d)"
     trap 'rm -rf "$work_dir"' EXIT HUP INT TERM
@@ -100,6 +106,43 @@ else
     run tar -xzf "$archive" -C "$work_dir"
     source_dir="$(find "$work_dir" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
     [ -n "$source_dir" ] || fail "The DroidPuppy archive was empty."
+fi
+
+constraints_file="$source_dir/$CONSTRAINTS_RELATIVE_PATH"
+if [ "$DRY_RUN" -ne 1 ]; then
+    [ -f "$constraints_file" ] || fail \
+        "Engine profile constraints are missing: $CONSTRAINTS_RELATIVE_PATH"
+    actual_hash="$(sha256sum "$constraints_file")"
+    actual_hash="${actual_hash%% *}"
+    [ "$actual_hash" = "$CONSTRAINTS_SHA256" ] || fail \
+        "Engine profile checksum mismatch; refusing an unverified install."
+fi
+
+if [ "$INSTALL_ENGINE" -eq 1 ]; then
+    if command -v code-puppy >/dev/null 2>&1 && [ "$REPAIR_ENGINE" -ne 1 ]; then
+        say "Code Puppy is already installed; leaving its version unchanged"
+    else
+        if [ "$REPAIR_ENGINE" -eq 1 ]; then
+            say "Repairing Code Puppy with exact engine profile $ENGINE_PROFILE"
+        else
+            say "Installing Code Puppy with engine profile $ENGINE_PROFILE"
+        fi
+        run python -m pip install --user "$PIPX_SPEC"
+        run python -m pipx ensurepath
+        if [ "$REPAIR_ENGINE" -eq 1 ]; then
+            run python -m pipx install --force --backend pip \
+                --pip-args "--constraint $constraints_file" "$ENGINE_SPEC"
+        else
+            run python -m pipx install --backend pip \
+                --pip-args "--constraint $constraints_file" "$ENGINE_SPEC"
+        fi
+    fi
+fi
+
+say "Installing the DroidPuppy capability overlay"
+if [ "$DRY_RUN" -eq 1 ]; then
+    printf '  Install plugins into %s/.code_puppy/plugins\n' "$HOME"
+else
     run python "$source_dir/scripts/install_overlay.py" --overwrite
 fi
 
