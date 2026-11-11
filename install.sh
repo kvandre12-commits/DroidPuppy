@@ -7,7 +7,9 @@ DROIDPUPPY_REF="${DROIDPUPPY_REF:-main}"
 DRY_RUN=0
 INSTALL_ENGINE=1
 INSTALL_OPTIONAL=1
+REPAIR_ENGINE=0
 ENGINE_PROFILE="android-0720"
+PIPX_SPEC="pipx==1.18.16"
 
 usage() {
     cat <<'EOF'
@@ -19,6 +21,7 @@ The installer is safe to rerun; DroidPuppy plugins are refreshed in place.
 Options:
   --dry-run        Print the installation plan without changing anything
   --skip-engine    Install only DroidPuppy (Code Puppy is already installed)
+  --repair-engine  Replace a broken pipx engine with the selected exact profile
   --minimal        Skip optional ADB and Termux:API command packages
   --engine-profile PROFILE
                    Install a versioned engine profile (default: android-0720)
@@ -44,6 +47,7 @@ while [ "$#" -gt 0 ]; do
     case "$1" in
         --dry-run) DRY_RUN=1 ;;
         --skip-engine) INSTALL_ENGINE=0 ;;
+        --repair-engine) REPAIR_ENGINE=1 ;;
         --minimal) INSTALL_OPTIONAL=0 ;;
         --engine-profile)
             [ "$#" -ge 2 ] || fail "--engine-profile requires a profile name"
@@ -55,6 +59,10 @@ while [ "$#" -gt 0 ]; do
     esac
     shift
 done
+
+if [ "$INSTALL_ENGINE" -ne 1 ] && [ "$REPAIR_ENGINE" -eq 1 ]; then
+    fail "--skip-engine and --repair-engine cannot be used together"
+fi
 
 case "$ENGINE_PROFILE" in
     android-0720)
@@ -111,14 +119,23 @@ if [ "$DRY_RUN" -ne 1 ]; then
 fi
 
 if [ "$INSTALL_ENGINE" -eq 1 ]; then
-    if command -v code-puppy >/dev/null 2>&1; then
+    if command -v code-puppy >/dev/null 2>&1 && [ "$REPAIR_ENGINE" -ne 1 ]; then
         say "Code Puppy is already installed; leaving its version unchanged"
     else
-        say "Installing Code Puppy with engine profile $ENGINE_PROFILE"
-        run python -m pip install --user pipx
+        if [ "$REPAIR_ENGINE" -eq 1 ]; then
+            say "Repairing Code Puppy with exact engine profile $ENGINE_PROFILE"
+        else
+            say "Installing Code Puppy with engine profile $ENGINE_PROFILE"
+        fi
+        run python -m pip install --user "$PIPX_SPEC"
         run python -m pipx ensurepath
-        run python -m pipx install --backend pip \
-            --pip-args "--constraint $constraints_file" "$ENGINE_SPEC"
+        if [ "$REPAIR_ENGINE" -eq 1 ]; then
+            run python -m pipx install --force --backend pip \
+                --pip-args "--constraint $constraints_file" "$ENGINE_SPEC"
+        else
+            run python -m pipx install --backend pip \
+                --pip-args "--constraint $constraints_file" "$ENGINE_SPEC"
+        fi
     fi
 fi
 

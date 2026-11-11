@@ -53,6 +53,7 @@ def test_help_documents_supported_install_modes():
     assert result.returncode == 0
     assert "--dry-run" in result.stdout
     assert "--skip-engine" in result.stdout
+    assert "--repair-engine" in result.stdout
     assert "--minimal" in result.stdout
     assert "--engine-profile" in result.stdout
     assert "--upgrade-engine" not in result.stdout
@@ -66,9 +67,11 @@ def test_dry_run_prints_complete_default_plan(tmp_path):
     assert result.returncode == 0, result.stderr
     assert "pkg install -y python rust clang git curl ripgrep libjpeg-turbo" in result.stdout
     assert "pkg install -y android-tools termux-api" in result.stdout
+    assert "pip install --user pipx==1.18.16" in result.stdout
     assert "code-puppy==0.0.720" in result.stdout
     assert "--backend pip" in result.stdout
     assert "--constraint" in result.stdout
+    assert "pip install --user pipx " not in result.stdout
     assert "pipx install code-puppy" not in result.stdout
     assert "DroidPuppy/archive/main.tar.gz" in result.stdout
     assert "android-0720.txt" in result.stdout
@@ -106,6 +109,27 @@ def test_existing_engine_is_never_mutated_by_default(tmp_path):
 def _write_executable(path: pathlib.Path, content: str) -> None:
     path.write_text(content)
     path.chmod(0o755)
+
+
+def test_explicit_repair_replaces_only_with_exact_profile(tmp_path):
+    bin_dir = isolated_path(tmp_path, include_engine=True)
+
+    result = run_installer(
+        "--dry-run", "--repair-engine", home=tmp_path, path=bin_dir
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Repairing Code Puppy with exact engine profile android-0720" in result.stdout
+    assert "pipx install --force --backend pip" in result.stdout
+    assert "code-puppy==0.0.720" in result.stdout
+    assert "pipx upgrade" not in result.stdout
+
+
+def test_skip_and_repair_engine_are_mutually_exclusive():
+    result = run_installer("--dry-run", "--skip-engine", "--repair-engine")
+
+    assert result.returncode != 0
+    assert "cannot be used together" in result.stderr
 
 
 def test_hermetic_fresh_install_uses_pinned_profile(tmp_path):

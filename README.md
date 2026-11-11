@@ -116,8 +116,10 @@ Puppy installation instead of upgrading it. The first run can take 10–20
 minutes because Android may compile native Python dependencies.
 
 The `android-0720` profile is currently a recovery candidate pending a clean
-second-phone validation. See [`docs/INSTALL.md`](docs/INSTALL.md) for its exact
-boundary and dry-run instructions.
+second-phone validation. If an earlier failed attempt left a broken pipx engine,
+run the same installer with `--repair-engine`; it replaces that environment only
+with the exact recovery profile, never a floating upgrade. See
+[`docs/INSTALL.md`](docs/INSTALL.md) for the boundary and dry-run instructions.
 
 Then start it:
 

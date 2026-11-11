@@ -34,11 +34,12 @@ This installs the complete stack:
 
 1. Termux's Python, Rust, Clang, Git, curl, ripgrep, and Pillow build support.
 2. Optional Android helpers (`adb` and Termux:API commands).
-3. The pinned `android-0720` engine profile in an isolated pipx environment.
-4. Code Puppy `0.0.720` through pipx's pip backend and the profile's exact
+3. The pinned pipx bootstrap used by the `android-0720` profile.
+4. The pinned `android-0720` engine profile in an isolated pipx environment.
+5. Code Puppy `0.0.720` through pipx's pip backend and the profile's exact
    constraints file.
-5. DroidPuppy plugins under `~/.code_puppy/plugins`.
-6. A final executable and plugin-count verification.
+6. DroidPuppy plugins under `~/.code_puppy/plugins`.
+7. A final executable and plugin-count verification.
 
 The installer verifies the constraints file by SHA-256 before using it. The
 profile excludes Monty/code mode and the mandatory Tree-sitter grammar bundle
@@ -70,6 +71,9 @@ curl -fsSL https://raw.githubusercontent.com/kvandre12-commits/DroidPuppy/main/i
 
 # Avoid optional ADB and Termux:API packages
 curl -fsSL https://raw.githubusercontent.com/kvandre12-commits/DroidPuppy/main/install.sh | bash -s -- --minimal
+
+# Replace a broken/partial pipx engine with the exact recovery profile
+curl -fsSL https://raw.githubusercontent.com/kvandre12-commits/DroidPuppy/main/install.sh | bash -s -- --repair-engine
 
 # Select the known Android recovery profile explicitly (it is also the default)
 curl -fsSL https://raw.githubusercontent.com/kvandre12-commits/DroidPuppy/main/install.sh | bash -s -- --engine-profile android-0720
@@ -141,6 +145,11 @@ reviewed and checksummed profile rather than an unbounded PyPI upgrade.
 If Code Puppy is already installed, the installer reports that fact and leaves
 its environment unchanged. Use `--skip-engine` when you explicitly want an
 overlay-only refresh; both paths preserve the existing engine.
+
+If a previous failed installation left a broken or partial pipx environment,
+use `--repair-engine`. This is deliberately different from an upgrade: it uses
+pipx `--force` only to replace the engine with the selected exact, checksummed
+profile. It never asks PyPI for the newest Code Puppy release.
 
 DroidPuppy is designed for Android devices running Termux.
 
