@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from ..android_utility_kit.tooling import android_share_text
+from android_utility_kit.tooling import android_share_text
 
 OUTPUT_DIR = Path("outputs")
 

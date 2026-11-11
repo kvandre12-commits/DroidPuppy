@@ -13,7 +13,7 @@ The profile installed:
 - `code-puppy==0.0.720`
 - `code-puppy-core-plugins==0.0.4`
 - the complete 88-package constraints closure
-- all 39 DroidPuppy plugins
+- all 39 DroidPuppy plugins using the `0.0.720` user-plugin import contract
 
 ## Commands under test
 
@@ -43,11 +43,19 @@ The pip backend is explicit because pipx's uv backend does not accept arbitrary
 - `code-puppy --help`: exit 0
 - DroidPuppy overlay install: passed
 - Installed DroidPuppy plugin count: 39
-- Repository test suite: 65 passed
+- DroidPuppy callbacks imported by the real `0.0.720` loader: 39 loaded, 0 failed
+- Repository test suite: 66 passed
 
 The fresh native build took roughly 13 minutes and temporarily used about 1.1
 GiB. New-phone instructions therefore recommend power, an awake Termux session,
 and at least 2 GiB of free storage.
+
+The engine installer also completed successfully on a second physical phone.
+That startup exposed a separate overlay compatibility defect: 20 plugin folders
+were present but failed to import because their sibling imports assumed a bundled
+namespace. The overlay now uses the user-plugin namespace expected by `0.0.720`,
+and a regression test imports every copied callback module rather than merely
+counting plugin directories.
 
 ## Honest remaining boundary
 

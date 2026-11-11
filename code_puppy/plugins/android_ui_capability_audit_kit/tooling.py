@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..android_app_inventory_kit.tooling import android_app_inventory_doctor, android_app_profile
-from ..android_input_kit.tooling import android_input_doctor
-from ..android_screen_capture_kit.tooling import android_screen_capture_doctor
-from ..android_ui_dump_kit.tooling import android_ui_dump_doctor
+from android_app_inventory_kit.tooling import android_app_inventory_doctor, android_app_profile
+from android_input_kit.tooling import android_input_doctor
+from android_screen_capture_kit.tooling import android_screen_capture_doctor
+from android_ui_dump_kit.tooling import android_ui_dump_doctor
 
 
 

@@ -5,11 +5,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ..android_orchestration_blueprint_kit.tooling import (
+from android_orchestration_blueprint_kit.tooling import (
     android_orchestration_blueprint_doctor,
     android_orchestration_blueprint_plan,
 )
-from ..android_workflow_feasibility_kit.tooling import (
+from android_workflow_feasibility_kit.tooling import (
     android_workflow_feasibility_assess,
     android_workflow_feasibility_doctor,
 )

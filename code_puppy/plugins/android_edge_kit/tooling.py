@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from code_puppy.plugins.android_cdp_client.tooling import (
+from android_cdp_client.tooling import (
     android_cdp_eval_js,
     android_cdp_navigate,
 )

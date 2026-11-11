@@ -4,7 +4,7 @@ import shutil
 import subprocess
 from typing import Any
 
-from ..android_utility_kit.tooling import android_share_text
+from android_utility_kit.tooling import android_share_text
 
 
 def _run_command(args: list[str], timeout: int = 20) -> dict[str, Any]:

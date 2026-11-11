@@ -177,7 +177,7 @@ def _check_browsers() -> list[dict[str, Any]]:
 def _check_cdp(local_port: int = 9222) -> list[dict[str, Any]]:
     """Deep check: actually probe a DevTools socket. Only run when requested."""
     try:
-        from code_puppy.plugins.android_cdp_bridge.tooling import android_cdp_probe
+        from android_cdp_bridge.tooling import android_cdp_probe
     except Exception as exc:  # plugin missing or broken
         return [_check("cdp_probe", WARN, f"android_cdp_bridge unavailable: {exc}", "")]
 

@@ -5,13 +5,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ..android_bugreport_kit.tooling import android_bugreport_collect, android_bugreport_doctor
-from ..android_dumpsys_kit.tooling import android_dumpsys_doctor, android_dumpsys_snapshot
-from ..android_logcat_kit.tooling import android_logcat_doctor, android_logcat_recent
-from ..android_reconnect_helper.tooling import android_reconnect_doctor
-from ..android_screen_capture_kit.tooling import android_capture_screenshot, android_screen_capture_doctor
-from ..android_setup_helper.tooling import android_setup_doctor
-from ..android_workflow_macro_kit.tooling import android_workflow_doctor
+from android_bugreport_kit.tooling import android_bugreport_collect, android_bugreport_doctor
+from android_dumpsys_kit.tooling import android_dumpsys_doctor, android_dumpsys_snapshot
+from android_logcat_kit.tooling import android_logcat_doctor, android_logcat_recent
+from android_reconnect_helper.tooling import android_reconnect_doctor
+from android_screen_capture_kit.tooling import android_capture_screenshot, android_screen_capture_doctor
+from android_setup_helper.tooling import android_setup_doctor
+from android_workflow_macro_kit.tooling import android_workflow_doctor
 
 OUTPUT_DIR = Path("outputs")
 

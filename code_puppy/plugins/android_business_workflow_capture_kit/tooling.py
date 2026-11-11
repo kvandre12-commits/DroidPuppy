@@ -5,10 +5,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ..android_app_stack_report_kit.tooling import android_app_stack_report_generate
-from ..android_orchestration_blueprint_kit.tooling import android_orchestration_blueprint_plan
-from ..android_ui_capability_audit_kit.tooling import android_ui_capability_audit_stack
-from ..android_workflow_feasibility_kit.tooling import android_workflow_feasibility_assess
+from android_app_stack_report_kit.tooling import android_app_stack_report_generate
+from android_orchestration_blueprint_kit.tooling import android_orchestration_blueprint_plan
+from android_ui_capability_audit_kit.tooling import android_ui_capability_audit_stack
+from android_workflow_feasibility_kit.tooling import android_workflow_feasibility_assess
 
 OUTPUT_DIR = Path("outputs")
 
