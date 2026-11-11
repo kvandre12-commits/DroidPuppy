@@ -48,9 +48,11 @@ candidate and must pass a clean-phone install before being advertised as a
 validated release.
 
 The first install may take 10–20 minutes because Android may compile native
-Python packages. Keep Termux open and the phone awake. The installer is
-idempotent: rerunning it refreshes the DroidPuppy overlay and **never mutates an
-already-installed engine**.
+Python packages and can temporarily use more than 1 GiB for build environments
+and caches. Plug the phone in, keep Termux open, and start with at least 2 GiB of
+free storage. The installer is idempotent: rerunning it refreshes the DroidPuppy
+overlay and **never mutates an already-installed engine** unless you explicitly
+request `--repair-engine`.
 
 Start the agent after installation:
 

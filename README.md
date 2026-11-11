@@ -113,7 +113,8 @@ The installer sets up the Android build tools, the pinned `android-0720`
 recovery profile, optional ADB/Termux helpers, and the DroidPuppy plugins. It
 verifies the engine constraints by SHA-256 and preserves any existing Code
 Puppy installation instead of upgrading it. The first run can take 10–20
-minutes because Android may compile native Python dependencies.
+minutes and temporarily use more than 1 GiB while Android compiles native
+Python dependencies, so plug the phone in and start with at least 2 GiB free.
 
 The `android-0720` profile is currently a recovery candidate pending a clean
 second-phone validation. If an earlier failed attempt left a broken pipx engine,
