@@ -68,7 +68,7 @@ case "$ENGINE_PROFILE" in
     android-0720)
         ENGINE_SPEC="code-puppy==0.0.720"
         CONSTRAINTS_RELATIVE_PATH="constraints/android-0720.txt"
-        CONSTRAINTS_SHA256="ed134a1a15af7a0f79872661fc456c4e0006496471b4c8b23dba5747c9a7a287"
+        CONSTRAINTS_SHA256="f993c0fb29c26de681808c760caf9e4e54ad5b8e726cf5d134fd03e55873ae2a"
         ;;
     *) fail "Unknown engine profile: $ENGINE_PROFILE" ;;
 esac

@@ -1,6 +1,6 @@
 # Android 0.0.720 recovery profile constraints
 #
-# Status: CANDIDATE — not yet declared independently reproducible.
+# Status: VALIDATED in a fresh isolated Termux pipx environment.
 # Captured read-only from the known-good Termux pipx environment
 # `code-puppy-clean` on Python 3.14.6. The dependency audit found all 88
 # distributions reachable from code-puppy under Android markers.
@@ -12,8 +12,8 @@
 #   anthropic==0.79.0
 #
 # Every other version is an observed closure pin. It worked in the preserved
-# environment, but has not independently been proven to be the only compatible
-# version. Do not publish this profile as validated until a clean install passes.
+# environment. The complete closure resolved and installed successfully on
+# Android ARM64 with Python 3.14.6; see docs/ANDROID_0720_VALIDATION.md.
 agent-client-protocol==0.11.1
 annotated-doc==0.0.5
 annotated-types==0.8.0

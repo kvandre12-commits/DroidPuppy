@@ -43,9 +43,9 @@ This installs the complete stack:
 
 The installer verifies the constraints file by SHA-256 before using it. The
 profile excludes Monty/code mode and the mandatory Tree-sitter grammar bundle
-introduced by newer, unvalidated engine releases. It is currently a recovery
-candidate and must pass a clean-phone install before being advertised as a
-validated release.
+introduced by newer, unvalidated engine releases. The recovery profile passed a
+fresh isolated Termux pipx installation on Android ARM64 with Python 3.14.6; the
+validation receipt is in [`ANDROID_0720_VALIDATION.md`](ANDROID_0720_VALIDATION.md).
 
 The first install may take 10–20 minutes because Android may compile native
 Python packages and can temporarily use more than 1 GiB for build environments
