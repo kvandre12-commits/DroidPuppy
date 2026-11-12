@@ -3,15 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ..android_handoff_kit.tooling import (
+from android_handoff_kit.tooling import (
     android_handoff_doctor,
     android_handoff_file,
     android_handoff_text,
     android_handoff_url,
 )
-from ..android_intent_kit.tooling import android_intent_doctor, android_intent_send
-from ..android_support_bundle_kit.tooling import android_support_bundle_collect
-from ..android_support_share_wizard.tooling import (
+from android_intent_kit.tooling import android_intent_doctor, android_intent_send
+from android_support_bundle_kit.tooling import android_support_bundle_collect
+from android_support_share_wizard.tooling import (
     android_support_issue_draft,
     android_support_share_wizard,
 )

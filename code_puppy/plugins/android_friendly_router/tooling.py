@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any
 from urllib.parse import urlparse
 
-from code_puppy.plugins.android_brave_bridge.tooling import open_android_url
-from code_puppy.plugins.android_utility_kit.tooling import (
+from android_brave_bridge.tooling import open_android_url
+from android_utility_kit.tooling import (
     SETTINGS_ACTIONS,
     _list_installed_packages,
     android_launch_app,

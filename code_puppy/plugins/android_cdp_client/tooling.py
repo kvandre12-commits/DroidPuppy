@@ -12,7 +12,7 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
-from code_puppy.plugins.android_cdp_bridge.tooling import android_cdp_probe
+from android_cdp_bridge.tooling import android_cdp_probe
 
 DEFAULT_PORT = 9222
 DEFAULT_SOCKET = "chrome_devtools_remote"

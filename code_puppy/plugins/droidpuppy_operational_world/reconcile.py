@@ -76,12 +76,14 @@ def _load_capabilities(capabilities_json: str) -> tuple[dict[str, Any], str]:
 
 
 def _load_android_native_tooling() -> Any:
-    try:
-        return importlib.import_module(
-            "code_puppy.plugins.droidpuppy_android_native.tooling"
-        )
-    except Exception:
-        pass
+    for module_name in (
+        "droidpuppy_android_native.tooling",
+        "code_puppy.plugins.droidpuppy_android_native.tooling",
+    ):
+        try:
+            return importlib.import_module(module_name)
+        except Exception:
+            pass
     sibling = (
         Path(__file__).resolve().parents[1] / "droidpuppy_android_native" / "tooling.py"
     )

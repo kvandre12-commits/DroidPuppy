@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import pathlib
+import subprocess
 import sys
 from types import SimpleNamespace
 
@@ -219,3 +221,53 @@ def test_copied_plugin_is_loader_compatible(tmp_path):
         sys.modules.pop("demo_plugin", None)
 
     assert (target / "demo_plugin" / "loaded.txt").read_text() == "ok"
+
+
+def test_all_overlay_plugins_import_under_user_plugin_contract(tmp_path):
+    plugins = install_overlay.discover_plugins()
+    target = tmp_path / "user_plugins"
+    results = install_overlay.install_plugins(plugins, target, mode="copy")
+
+    assert len(results) == 39
+    script = """
+import importlib
+import json
+import pathlib
+import sys
+import types
+
+pydantic_ai = types.ModuleType("pydantic_ai")
+pydantic_ai.RunContext = object
+sys.modules["pydantic_ai"] = pydantic_ai
+
+callbacks = types.ModuleType("code_puppy.callbacks")
+callbacks.register_callback = lambda *args, **kwargs: None
+sys.modules["code_puppy.callbacks"] = callbacks
+
+messaging = types.ModuleType("code_puppy.messaging")
+messaging.emit_info = lambda *args, **kwargs: None
+sys.modules["code_puppy.messaging"] = messaging
+
+plugins_dir = pathlib.Path(sys.argv[1])
+sys.path.insert(0, str(plugins_dir))
+failed = {}
+for plugin_dir in sorted(plugins_dir.iterdir()):
+    if not (plugin_dir / "register_callbacks.py").is_file():
+        continue
+    try:
+        importlib.import_module(f"{plugin_dir.name}.register_callbacks")
+    except Exception as exc:
+        failed[plugin_dir.name] = f"{type(exc).__name__}: {exc}"
+print(json.dumps(failed, sort_keys=True))
+raise SystemExit(1 if failed else 0)
+"""
+    completed = subprocess.run(
+        [sys.executable, "-c", script, str(target)],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+
+    failed = json.loads(completed.stdout.strip() or "{}")
+    assert completed.returncode == 0, failed
+    assert failed == {}

@@ -7,8 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from code_puppy.plugins.android_browser_easy.tooling import _resolve_target
-from code_puppy.plugins.android_cdp_client.tooling import CDPError, _cdp_call
+from android_browser_easy.tooling import _resolve_target
+from android_cdp_client.tooling import CDPError, _cdp_call
 
 DEFAULT_PORT = 9222
 OUTPUT_DIR = Path("outputs")

@@ -7,7 +7,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from code_puppy.plugins.android_brave_bridge.tooling import get_android_browser_status
+from android_brave_bridge.tooling import get_android_browser_status
 
 DEFAULT_CDP_PORT = 9222
 DEFAULT_HTTP_TIMEOUT = 5

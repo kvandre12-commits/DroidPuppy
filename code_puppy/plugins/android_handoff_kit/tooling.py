@@ -6,8 +6,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from ..android_intent_kit.tooling import android_intent_send
-from ..android_utility_kit.tooling import android_share_text
+from android_intent_kit.tooling import android_intent_send
+from android_utility_kit.tooling import android_share_text
 
 
 

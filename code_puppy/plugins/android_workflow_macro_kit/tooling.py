@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..android_brave_bridge.tooling import get_android_browser_status
-from ..android_cdp_bridge.tooling import android_cdp_doctor
-from ..android_friendly_router.tooling import android_list_shortcuts, android_open
-from ..android_screen_capture_kit.tooling import android_capture_screenshot
-from ..android_utility_kit.tooling import android_share_text, android_utility_doctor
+from android_brave_bridge.tooling import get_android_browser_status
+from android_cdp_bridge.tooling import android_cdp_doctor
+from android_friendly_router.tooling import android_list_shortcuts, android_open
+from android_screen_capture_kit.tooling import android_capture_screenshot
+from android_utility_kit.tooling import android_share_text, android_utility_doctor
 
 DEFAULT_REPO_URL = "https://github.com/kvandre12-commits/DroidPuppy"
 

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..android_cdp_bridge.tooling import android_cdp_doctor
-from ..android_notification_kit.tooling import android_notification_doctor
-from ..android_reconnect_helper.tooling import android_reconnect_doctor
-from ..android_utility_kit.tooling import android_utility_doctor
+from android_cdp_bridge.tooling import android_cdp_doctor
+from android_notification_kit.tooling import android_notification_doctor
+from android_reconnect_helper.tooling import android_reconnect_doctor
+from android_utility_kit.tooling import android_utility_doctor
 
 GOALS = {
     "basics": "Get comfortable with DroidPuppy's basic Android-native commands.",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..android_app_inventory_kit.tooling import (
+from android_app_inventory_kit.tooling import (
     android_app_inventory_doctor,
     android_app_profile,
 )

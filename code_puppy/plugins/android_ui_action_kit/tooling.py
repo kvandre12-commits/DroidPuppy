@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..android_input_kit.tooling import (
+from android_input_kit.tooling import (
     android_input_keyevent,
     android_input_tap_bounds,
     android_input_text,
 )
-from ..android_ui_dump_kit.tooling import android_ui_dump_find
+from android_ui_dump_kit.tooling import android_ui_dump_find
 
 
 def android_ui_action_doctor() -> dict[str, Any]:
