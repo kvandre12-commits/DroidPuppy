@@ -7,8 +7,11 @@ DROIDPUPPY_REF="${DROIDPUPPY_REF:-main}"
 DRY_RUN=0
 INSTALL_ENGINE=1
 INSTALL_OPTIONAL=1
+INSTALL_BUILD_TOOLS=1
 REPAIR_ENGINE=0
 ENGINE_PROFILE="android-0720"
+BASELINE=""
+BASELINE_PLUGINS=()
 PIPX_SPEC="pipx==1.18.16"
 
 usage() {
@@ -25,6 +28,8 @@ Options:
   --minimal        Skip optional ADB and Termux:API command packages
   --engine-profile PROFILE
                    Install a versioned engine profile (default: android-0720)
+  --baseline BASELINE
+                   Install a protected overlay-only baseline (june-brave-v1)
   -h, --help       Show this help
 EOF
 }
@@ -54,24 +59,56 @@ while [ "$#" -gt 0 ]; do
             ENGINE_PROFILE="$2"
             shift
             ;;
+        --baseline)
+            [ "$#" -ge 2 ] || fail "--baseline requires a baseline name"
+            BASELINE="$2"
+            shift
+            ;;
         -h|--help) usage; exit 0 ;;
         *) fail "Unknown option: $1" ;;
     esac
     shift
 done
 
+if [ -n "$BASELINE" ]; then
+    case "$BASELINE" in
+        june-brave-v1)
+            INSTALL_ENGINE=0
+            INSTALL_OPTIONAL=0
+            INSTALL_BUILD_TOOLS=0
+            PROFILE_RELATIVE_PATH="baselines/june-brave-v1.json"
+            PROFILE_SHA256="dffc69697ec1f6c3834b5bde89809ded72fd53c863f6cb749f89bfa884a4c19d"
+            BASELINE_PLUGINS=(
+                android_brave_bridge
+                android_browser_actions
+                android_browser_easy
+                android_cdp_bridge
+                android_cdp_client
+                android_friendly_router
+                android_utility_kit
+            )
+            ;;
+        *) fail "Unknown protected baseline: $BASELINE" ;;
+    esac
+fi
+
 if [ "$INSTALL_ENGINE" -ne 1 ] && [ "$REPAIR_ENGINE" -eq 1 ]; then
+    if [ -n "$BASELINE" ]; then
+        fail "Engine repair is forbidden by protected baseline $BASELINE"
+    fi
     fail "--skip-engine and --repair-engine cannot be used together"
 fi
 
-case "$ENGINE_PROFILE" in
-    android-0720)
-        ENGINE_SPEC="code-puppy==0.0.720"
-        CONSTRAINTS_RELATIVE_PATH="constraints/android-0720.txt"
-        CONSTRAINTS_SHA256="f993c0fb29c26de681808c760caf9e4e54ad5b8e726cf5d134fd03e55873ae2a"
-        ;;
-    *) fail "Unknown engine profile: $ENGINE_PROFILE" ;;
-esac
+if [ -z "$BASELINE" ]; then
+    case "$ENGINE_PROFILE" in
+        android-0720)
+            ENGINE_SPEC="code-puppy==0.0.720"
+            PROFILE_RELATIVE_PATH="constraints/android-0720.txt"
+            PROFILE_SHA256="f993c0fb29c26de681808c760caf9e4e54ad5b8e726cf5d134fd03e55873ae2a"
+            ;;
+        *) fail "Unknown engine profile: $ENGINE_PROFILE" ;;
+    esac
+fi
 
 if [ "$DRY_RUN" -ne 1 ]; then
     command -v pkg >/dev/null 2>&1 || fail \
@@ -82,8 +119,12 @@ if [ "$DRY_RUN" -ne 1 ]; then
     esac
 fi
 
-say "Installing the Android build tools Code Puppy needs"
-run pkg install -y python rust clang git curl ripgrep libjpeg-turbo
+if [ "$INSTALL_BUILD_TOOLS" -eq 1 ]; then
+    say "Installing the Android build tools Code Puppy needs"
+    run pkg install -y python rust clang git curl ripgrep libjpeg-turbo
+else
+    say "Protected baseline: no build tools or Python packages will be installed"
+fi
 if [ "$INSTALL_OPTIONAL" -eq 1 ]; then
     say "Installing optional phone-control helpers"
     run pkg install -y android-tools termux-api
@@ -96,7 +137,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
     source_dir="\$WORK_DIR/DroidPuppy-$DROIDPUPPY_REF"
     printf '  Download %s/archive/%s.tar.gz\n' "$DROIDPUPPY_REPO" "$DROIDPUPPY_REF"
     printf '  Verify %s with SHA-256 %s\n' \
-        "$CONSTRAINTS_RELATIVE_PATH" "$CONSTRAINTS_SHA256"
+        "$PROFILE_RELATIVE_PATH" "$PROFILE_SHA256"
 else
     work_dir="$(mktemp -d)"
     trap 'rm -rf "$work_dir"' EXIT HUP INT TERM
@@ -108,15 +149,20 @@ else
     [ -n "$source_dir" ] || fail "The DroidPuppy archive was empty."
 fi
 
-constraints_file="$source_dir/$CONSTRAINTS_RELATIVE_PATH"
+profile_file="$source_dir/$PROFILE_RELATIVE_PATH"
 if [ "$DRY_RUN" -ne 1 ]; then
-    [ -f "$constraints_file" ] || fail \
-        "Engine profile constraints are missing: $CONSTRAINTS_RELATIVE_PATH"
-    actual_hash="$(sha256sum "$constraints_file")"
+    [ -f "$profile_file" ] || fail "Protected profile is missing: $PROFILE_RELATIVE_PATH"
+    actual_hash="$(sha256sum "$profile_file")"
     actual_hash="${actual_hash%% *}"
-    [ "$actual_hash" = "$CONSTRAINTS_SHA256" ] || fail \
-        "Engine profile checksum mismatch; refusing an unverified install."
+    [ "$actual_hash" = "$PROFILE_SHA256" ] || fail \
+        "Protected profile checksum mismatch; refusing an unverified install."
 fi
+
+if [ -n "$BASELINE" ] && ! command -v code-puppy >/dev/null 2>&1; then
+    fail "Baseline $BASELINE reuses an existing engine; code-puppy was not found."
+fi
+
+constraints_file="$profile_file"
 
 if [ "$INSTALL_ENGINE" -eq 1 ]; then
     if command -v code-puppy >/dev/null 2>&1 && [ "$REPAIR_ENGINE" -ne 1 ]; then
@@ -142,6 +188,11 @@ fi
 say "Installing the DroidPuppy capability overlay"
 if [ "$DRY_RUN" -eq 1 ]; then
     printf '  Install plugins into %s/.code_puppy/plugins\n' "$HOME"
+fi
+if [ -n "$BASELINE" ]; then
+    run python "$source_dir/scripts/verify_baseline.py" "$BASELINE"
+    run python "$source_dir/scripts/install_overlay.py" --overwrite \
+        --plugins "${BASELINE_PLUGINS[@]}"
 else
     run python "$source_dir/scripts/install_overlay.py" --overwrite
 fi
@@ -152,9 +203,18 @@ if [ "$DRY_RUN" -eq 1 ]; then
 else
     command -v code-puppy >/dev/null 2>&1 || fail \
         "code-puppy is not on PATH. Restart Termux, then run code-puppy -i."
-    plugin_count="$(find "$HOME/.code_puppy/plugins" -mindepth 2 -maxdepth 2 \
-        -name register_callbacks.py | wc -l | tr -d ' ')"
-    [ "$plugin_count" -gt 0 ] || fail "No DroidPuppy plugins were installed."
+    if [ -n "$BASELINE" ]; then
+        plugin_count=0
+        for plugin in "${BASELINE_PLUGINS[@]}"; do
+            [ -f "$HOME/.code_puppy/plugins/$plugin/register_callbacks.py" ] || \
+                fail "Protected baseline plugin was not installed: $plugin"
+            plugin_count=$((plugin_count + 1))
+        done
+    else
+        plugin_count="$(find "$HOME/.code_puppy/plugins" -mindepth 2 -maxdepth 2 \
+            -name register_callbacks.py | wc -l | tr -d ' ')"
+        [ "$plugin_count" -gt 0 ] || fail "No DroidPuppy plugins were installed."
+    fi
     printf '  code-puppy: %s\n' "$(command -v code-puppy)"
     printf '  plugins:    %s\n' "$plugin_count"
 fi
@@ -166,8 +226,20 @@ Installation complete.
 Start your phone agent with:
 
   code-puppy -i
-
-The first install can take 10–20 minutes while Android compiles native Python
-packages. Browser control additionally requires Android Developer options and
-Wireless debugging; ordinary coding and phone handoff tools do not.
 EOF
+
+if [ -n "$BASELINE" ]; then
+    cat <<'EOF'
+
+The protected June baseline installed no engine, Python package, or build tool.
+Brave handoff works without desktop Playwright. Advanced CDP control additionally
+requires Android Developer options, wireless debugging, and an existing adb.
+EOF
+else
+    cat <<'EOF'
+
+The first engine install can take 10–20 minutes while Android compiles native
+Python packages. Browser control additionally requires Android Developer options
+and Wireless debugging; ordinary coding and phone handoff tools do not.
+EOF
+fi

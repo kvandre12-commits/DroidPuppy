@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "baseline_id": "june-brave-v1",
+  "status": "protected",
+  "origin": {
+    "repository": "kvandre12-commits/DroidPuppy",
+    "commit": "275bd5a8c9f4023a56be08cc454af585e3586d3f",
+    "date": "2026-06-13",
+    "title": "Initial DroidPuppy Android toolkit"
+  },
+  "purpose": "Reuse a working Code Puppy engine and install only the original Android and Brave actuator overlay.",
+  "engine_policy": "reuse-only",
+  "package_installs": [],
+  "plugins": [
+    "android_brave_bridge",
+    "android_browser_actions",
+    "android_browser_easy",
+    "android_cdp_bridge",
+    "android_cdp_client",
+    "android_friendly_router",
+    "android_utility_kit"
+  ],
+  "plugin_tree_sha256": {
+    "android_brave_bridge": "fc8aa78f42ac8d759a02bf8a6568dd6e4b0ffa155afe4cd58464ea3890615b15",
+    "android_browser_actions": "6667a9e8feccbe3dd7371d44864b86e5fd1893e8d37d2ff8199cc77bf528cf75",
+    "android_browser_easy": "090784066006c988c8d5c1c46ae73a94861ae2ca464bc89bb91aa97889cc91d9",
+    "android_cdp_bridge": "62ec0ea96f99a3bc9b87bd3a6e01660f2363fcbd5bb168418181b4461cec1c93",
+    "android_cdp_client": "6aa0bf82abba30f4adab5027c1bb740bf04448481914e6e4a96422d8c3f443fe",
+    "android_friendly_router": "555998a639646a5c697a59413fd20ab4de240baaa83694e62ab9c205d8abe136",
+    "android_utility_kit": "92b25983be69515a3c3226c78cbe4a17cc4365ea7c755fdadb5be6a76566da26"
+  },
+  "forbidden_dependencies": [
+    "pydantic-ai-pax",
+    "pydantic-ai-harness",
+    "pydantic-monty",
+    "playwright",
+    "tree-sitter"
+  ],
+  "forbidden_operations": [
+    "install-engine",
+    "repair-engine",
+    "sync-all-groups",
+    "upgrade-engine",
+    "build-upstream-pydantic-ai"
+  ],
+  "browser_boundary": {
+    "base": "Android intent handoff to native Brave",
+    "advanced_optional": "ADB and CDP attachment",
+    "desktop_backend": "excluded"
+  }
+}

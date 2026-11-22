@@ -1,0 +1,157 @@
+{
+  "benchmark": "delivery-surface",
+  "claims": {
+    "measures_architecture_not_model_quality": true,
+    "performs_installs": false,
+    "proves_security": false,
+    "proves_token_efficiency": false,
+    "uses_network": false
+  },
+  "schema_version": 1,
+  "targets": [
+    {
+      "input_name": "june-brave-v1.json",
+      "input_sha256": "dffc69697ec1f6c3834b5bde89809ded72fd53c863f6cb749f89bfa884a4c19d",
+      "label": "june-brave-v1",
+      "metrics": {
+        "baseline_id": "june-brave-v1",
+        "engine_policy": "reuse-only",
+        "forbidden_dependencies": [
+          "pydantic-ai-pax",
+          "pydantic-ai-harness",
+          "pydantic-monty",
+          "playwright",
+          "tree-sitter"
+        ],
+        "forbidden_operations": [
+          "install-engine",
+          "repair-engine",
+          "sync-all-groups",
+          "upgrade-engine",
+          "build-upstream-pydantic-ai"
+        ],
+        "kind": "protected-baseline",
+        "missing_plugins": [],
+        "package_install_count": 0,
+        "plugin_bytes": 76318,
+        "plugin_count": 7,
+        "plugin_file_count": 21
+      }
+    },
+    {
+      "input_name": "android-0720.txt",
+      "input_sha256": "f993c0fb29c26de681808c760caf9e4e54ad5b8e726cf5d134fd03e55873ae2a",
+      "label": "android-0720",
+      "metrics": {
+        "constraint_count": 88,
+        "exact_pin_count": 88,
+        "kind": "constraints",
+        "sensitive_families": []
+      }
+    },
+    {
+      "input_name": "pyproject.toml",
+      "input_sha256": "f661097dce0a8f6ce78c92ed4b1d68fdb06b113d26ee244ab586a30d38399000",
+      "label": "puppy-0759",
+      "metrics": {
+        "declared_dependency_count": 22,
+        "declared_sensitive_families": [
+          "pydantic-ai-harness"
+        ],
+        "direct_git_source_count": 0,
+        "exact_pinned_dependency_count": 2,
+        "kind": "pyproject",
+        "lock_present": true,
+        "lock_sha256": "3dfdc8e9a8f2caa6d5fb263987c933de23d0db06e75dcc36130cd47c0d2de9bb",
+        "locked_git_source_count": 0,
+        "locked_package_count": 145,
+        "locked_sensitive_families": [
+          "pydantic-ai-harness",
+          "playwright"
+        ],
+        "project_name": "code-puppy",
+        "project_version": "0.0.759",
+        "requested_extra_count": 4,
+        "requested_extras": [
+          "anthropic",
+          "http2",
+          "mcp",
+          "openai"
+        ]
+      }
+    },
+    {
+      "input_name": "pyproject.toml",
+      "input_sha256": "33ed48e6212b119decd48f73e66b5737aeba0da118f3277b74d4bbe13e3e47d0",
+      "label": "puppy-0890",
+      "metrics": {
+        "declared_dependency_count": 28,
+        "declared_sensitive_families": [
+          "pydantic-ai-harness",
+          "pydantic-monty",
+          "playwright"
+        ],
+        "direct_git_source_count": 0,
+        "exact_pinned_dependency_count": 3,
+        "kind": "pyproject",
+        "lock_present": true,
+        "lock_sha256": "9f9cf8997218da42e1e0dcfa9ecf7b05c55fea3f2a8fd7fe1746f4648979f5bf",
+        "locked_git_source_count": 0,
+        "locked_package_count": 167,
+        "locked_sensitive_families": [
+          "pydantic-ai-harness",
+          "pydantic-monty",
+          "playwright",
+          "tree-sitter"
+        ],
+        "project_name": "code-puppy",
+        "project_version": "0.0.890",
+        "requested_extra_count": 5,
+        "requested_extras": [
+          "anthropic",
+          "code-mode",
+          "http2",
+          "mcp",
+          "openai"
+        ]
+      }
+    },
+    {
+      "input_name": "pyproject.toml",
+      "input_sha256": "b55e6a99278ff15929bc55acf7912ff383bb2e780618aa81c119a9366a2e5d54",
+      "label": "puppy-v1",
+      "metrics": {
+        "declared_dependency_count": 6,
+        "declared_sensitive_families": [
+          "pydantic-ai-pax"
+        ],
+        "direct_git_source_count": 5,
+        "exact_pinned_dependency_count": 2,
+        "kind": "pyproject",
+        "lock_present": true,
+        "lock_sha256": "81fa54411bf828838c38e0f933a7316e7e7b6bf29db1c81d376542e77e29d785",
+        "locked_git_source_count": 5,
+        "locked_package_count": 185,
+        "locked_sensitive_families": [
+          "pydantic-ai-pax",
+          "pydantic-ai-harness",
+          "pydantic-monty"
+        ],
+        "project_name": "code-puppy",
+        "project_version": "1.0.0rc1",
+        "requested_extra_count": 9,
+        "requested_extras": [
+          "boxd",
+          "daytona",
+          "e2b",
+          "kubernetes",
+          "modal",
+          "opensandbox",
+          "render",
+          "sprites",
+          "typesafe"
+        ]
+      }
+    }
+  ]
+}
