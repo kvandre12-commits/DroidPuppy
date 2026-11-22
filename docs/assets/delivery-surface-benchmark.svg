@@ -29,5 +29,5 @@
   <text x="862" y="464" fill="#f0f6fc" font-family="sans-serif" font-size="16" font-weight="700">185</text>
 
   <text x="48" y="510" fill="#8b949e" font-family="sans-serif" font-size="14">* 0.0.720 is an exact validated install closure. Later rows are full uv.lock graphs and may include optional/dev packages.</text>
-  <text x="48" y="535" fill="#8b949e" font-family="sans-serif" font-size="14">Receipt SHA-256: 046aaddf0fa114a45ec77161d67d0beebb9838d206cf83477e6bf4dbf313155c</text>
+  <text x="48" y="535" fill="#8b949e" font-family="sans-serif" font-size="14">Receipt SHA-256: f4efc211fedbed17b899d56ba99237b98804551c8d261d840959e861a508907c</text>
 </svg>

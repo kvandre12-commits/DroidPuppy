@@ -14,10 +14,12 @@ local, read-only inputs:
 Receipt SHA-256:
 
 ```text
-046aaddf0fa114a45ec77161d67d0beebb9838d206cf83477e6bf4dbf313155c
+f4efc211fedbed17b899d56ba99237b98804551c8d261d840959e861a508907c
 ```
 
 No package was installed, no network or provider was contacted, and no target
-repository was modified. The receipt measures declared/locked delivery surface.
+repository was modified. The protected baseline's selected plugin trees were
+rehashed and matched all seven expected implementation hashes. The receipt
+measures declared/locked delivery surface.
 It does not establish model quality, task success, token efficiency, exploitable
 vulnerability count, or security.

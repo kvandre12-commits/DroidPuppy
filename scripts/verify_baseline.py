@@ -4,11 +4,17 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
+import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from baseline_integrity import verify_plugin_trees
+
+REPO_ROOT = SCRIPT_DIR.parent
 BASELINES_DIR = REPO_ROOT / "baselines"
 PLUGINS_DIR = REPO_ROOT / "code_puppy" / "plugins"
 EXPECTED_PLUGINS = (
@@ -34,21 +40,6 @@ REQUIRED_FORBIDDEN_OPERATIONS = {
     "upgrade-engine",
     "build-upstream-pydantic-ai",
 }
-
-
-def plugin_tree_sha256(plugin_dir: Path) -> str:
-    """Hash file names and bytes in a plugin tree deterministically."""
-    digest = hashlib.sha256()
-    for path in sorted(plugin_dir.rglob("*")):
-        if not path.is_file() or "__pycache__" in path.parts:
-            continue
-        relative = path.relative_to(plugin_dir).as_posix().encode()
-        content = path.read_bytes()
-        digest.update(len(relative).to_bytes(4, "big"))
-        digest.update(relative)
-        digest.update(len(content).to_bytes(8, "big"))
-        digest.update(content)
-    return digest.hexdigest()
 
 
 def load_baseline(baseline_id: str) -> dict[str, object]:
@@ -80,18 +71,9 @@ def verify_baseline(baseline_id: str) -> dict[str, object]:
     expected_hashes = data.get("plugin_tree_sha256")
     if plugins != list(EXPECTED_PLUGINS):
         errors.append("plugin allowlist differs from the June 2026 baseline")
-    elif not isinstance(expected_hashes, dict):
-        errors.append("plugin_tree_sha256 must be an object")
     else:
-        for plugin in EXPECTED_PLUGINS:
-            plugin_dir = PLUGINS_DIR / plugin
-            callbacks = plugin_dir / "register_callbacks.py"
-            if not callbacks.is_file():
-                errors.append(f"missing plugin entrypoint: {plugin}")
-                continue
-            actual_hash = plugin_tree_sha256(plugin_dir)
-            if expected_hashes.get(plugin) != actual_hash:
-                errors.append(f"plugin tree checksum mismatch: {plugin}")
+        integrity = verify_plugin_trees(PLUGINS_DIR, plugins, expected_hashes)
+        errors.extend(integrity["errors"])
 
     forbidden_dependencies = set(data.get("forbidden_dependencies", []))
     missing_dependencies = REQUIRED_FORBIDDEN_DEPENDENCIES - forbidden_dependencies

@@ -7,9 +7,16 @@ import argparse
 import hashlib
 import json
 import re
+import sys
 from pathlib import Path
 
 import tomllib
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from baseline_integrity import verify_plugin_trees
 
 SCHEMA_VERSION = 1
 NAME_PATTERN = re.compile(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)")
@@ -143,9 +150,20 @@ def measure_baseline(path: Path) -> dict[str, object]:
     data = json.loads(path.read_text())
     if not isinstance(data, dict):
         raise TypeError("baseline must be a JSON object")
-    plugins = data.get("plugins", [])
+    declared_plugins = data.get("plugins", [])
     package_installs = data.get("package_installs", [])
     plugin_root = path.parent.parent / "code_puppy" / "plugins"
+    integrity = verify_plugin_trees(
+        plugin_root,
+        declared_plugins,
+        data.get("plugin_tree_sha256"),
+    )
+    plugins = (
+        declared_plugins
+        if isinstance(declared_plugins, list)
+        and all(isinstance(plugin, str) for plugin in declared_plugins)
+        else []
+    )
     plugin_files: list[Path] = []
     missing_plugins: list[str] = []
     for plugin in plugins:
@@ -167,6 +185,9 @@ def measure_baseline(path: Path) -> dict[str, object]:
         "plugin_file_count": len(plugin_files),
         "plugin_bytes": sum(file.stat().st_size for file in plugin_files),
         "missing_plugins": sorted(missing_plugins),
+        "plugin_integrity_valid": integrity["valid"],
+        "plugin_integrity_errors": integrity["errors"],
+        "plugin_tree_sha256_actual": integrity["actual_hashes"],
         "forbidden_dependencies": data.get("forbidden_dependencies", []),
         "forbidden_operations": data.get("forbidden_operations", []),
     }
@@ -179,6 +200,9 @@ def measure_target(label: str, path: Path) -> dict[str, object]:
         metrics = measure_pyproject(path)
     elif path.suffix == ".json":
         metrics = measure_baseline(path)
+        if not metrics["plugin_integrity_valid"]:
+            errors = "; ".join(metrics["plugin_integrity_errors"])
+            raise ValueError(f"protected baseline integrity failed: {errors}")
     elif path.suffix == ".txt":
         metrics = measure_constraints(path)
     else:

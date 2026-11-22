@@ -91,11 +91,14 @@ evidence/benchmarks/delivery-surface-local-20261122.json
 Receipt SHA-256:
 
 ```text
-046aaddf0fa114a45ec77161d67d0beebb9838d206cf83477e6bf4dbf313155c
+f4efc211fedbed17b899d56ba99237b98804551c8d261d840959e861a508907c
 ```
 
 Every input is identified by SHA-256 in the receipt. Labels are for humans;
-hashes are the evidence boundary.
+hashes are the evidence boundary. The benchmark also recalculates every selected
+plugin tree hash and refuses to issue a trusted receipt when implementation
+bytes differ from the protected baseline, even if file counts and sizes remain
+unchanged.
 
 ## What this does not prove
 
