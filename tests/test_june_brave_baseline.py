@@ -7,6 +7,8 @@ import shutil
 import subprocess
 import sys
 
+from scripts import baseline_integrity
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 MANIFEST = REPO_ROOT / "baselines" / "june-brave-v1.json"
 VERIFIER = REPO_ROOT / "scripts" / "verify_baseline.py"
@@ -44,7 +46,9 @@ def test_june_baseline_freezes_plugin_implementation_bytes():
     assert set(expected_hashes) == set(verify_baseline.EXPECTED_PLUGINS)
     for plugin in verify_baseline.EXPECTED_PLUGINS:
         plugin_dir = verify_baseline.PLUGINS_DIR / plugin
-        assert verify_baseline.plugin_tree_sha256(plugin_dir) == expected_hashes[plugin]
+        assert (
+            baseline_integrity.plugin_tree_sha256(plugin_dir) == expected_hashes[plugin]
+        )
 
 
 def test_verifier_rejects_plugin_implementation_drift(monkeypatch, tmp_path):

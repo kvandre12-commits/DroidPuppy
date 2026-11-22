@@ -35,7 +35,18 @@
         "package_install_count": 0,
         "plugin_bytes": 76318,
         "plugin_count": 7,
-        "plugin_file_count": 21
+        "plugin_file_count": 21,
+        "plugin_integrity_errors": [],
+        "plugin_integrity_valid": true,
+        "plugin_tree_sha256_actual": {
+          "android_brave_bridge": "fc8aa78f42ac8d759a02bf8a6568dd6e4b0ffa155afe4cd58464ea3890615b15",
+          "android_browser_actions": "6667a9e8feccbe3dd7371d44864b86e5fd1893e8d37d2ff8199cc77bf528cf75",
+          "android_browser_easy": "090784066006c988c8d5c1c46ae73a94861ae2ca464bc89bb91aa97889cc91d9",
+          "android_cdp_bridge": "62ec0ea96f99a3bc9b87bd3a6e01660f2363fcbd5bb168418181b4461cec1c93",
+          "android_cdp_client": "6aa0bf82abba30f4adab5027c1bb740bf04448481914e6e4a96422d8c3f443fe",
+          "android_friendly_router": "555998a639646a5c697a59413fd20ab4de240baaa83694e62ab9c205d8abe136",
+          "android_utility_kit": "92b25983be69515a3c3226c78cbe4a17cc4365ea7c755fdadb5be6a76566da26"
+        }
       }
     },
     {
