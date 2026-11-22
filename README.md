@@ -134,6 +134,18 @@ Preview the plan without changing anything:
 curl -fsSL https://raw.githubusercontent.com/kvandre12-commits/DroidPuppy/main/install.sh | bash -s -- --dry-run
 ```
 
+To preserve the original June Android/Brave architecture on a phone that
+already has a working Code Puppy engine, use the protected overlay-only
+baseline. It installs no engine, Python packages, or build tools:
+
+```bash
+bash install.sh --dry-run --baseline june-brave-v1
+bash install.sh --baseline june-brave-v1
+```
+
+See [`docs/JUNE_BRAVE_BASELINE.md`](docs/JUNE_BRAVE_BASELINE.md) for its exact
+allowlist, forbidden dependency families, provenance, and change-control rule.
+
 See [`docs/INSTALL.md`](docs/INSTALL.md) for upgrades, minimal installs,
 troubleshooting, and the manual developer workflow.
 
