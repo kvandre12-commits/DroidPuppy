@@ -149,7 +149,9 @@ The broader engineering argument is documented in
 [`docs/PLATFORM_SUBSTITUTION_THESIS.md`](docs/PLATFORM_SUBSTITUTION_THESIS.md).
 The benchmark protocol and current offline delivery-surface receipt are in
 [`docs/BENCHMARKING.md`](docs/BENCHMARKING.md) and
-[`evidence/benchmarks/`](evidence/benchmarks/).
+[`evidence/benchmarks/`](evidence/benchmarks/). The hardware-rooted security and
+native mobile compute plan is in
+[`docs/TRUST_AND_ACCELERATION_ROADMAP.md`](docs/TRUST_AND_ACCELERATION_ROADMAP.md).
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for upgrades, minimal installs,
 troubleshooting, and the manual developer workflow.
