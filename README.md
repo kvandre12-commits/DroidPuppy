@@ -147,6 +147,9 @@ See [`docs/JUNE_BRAVE_BASELINE.md`](docs/JUNE_BRAVE_BASELINE.md) for its exact
 allowlist, forbidden dependency families, provenance, and change-control rule.
 The broader engineering argument is documented in
 [`docs/PLATFORM_SUBSTITUTION_THESIS.md`](docs/PLATFORM_SUBSTITUTION_THESIS.md).
+The benchmark protocol and current offline delivery-surface receipt are in
+[`docs/BENCHMARKING.md`](docs/BENCHMARKING.md) and
+[`evidence/benchmarks/`](evidence/benchmarks/).
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for upgrades, minimal installs,
 troubleshooting, and the manual developer workflow.
