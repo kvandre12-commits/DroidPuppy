@@ -29,12 +29,15 @@ def run_installer(
     return subprocess.run(
         [BASH, str(INSTALLER), *args],
         capture_output=True,
+        check=False,
         env=env,
         text=True,
     )
 
 
-def isolated_path(tmp_path: pathlib.Path, *, include_engine: bool = False) -> pathlib.Path:
+def isolated_path(
+    tmp_path: pathlib.Path, *, include_engine: bool = False
+) -> pathlib.Path:
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     cat = shutil.which("cat")
@@ -56,16 +59,18 @@ def test_help_documents_supported_install_modes():
     assert "--repair-engine" in result.stdout
     assert "--minimal" in result.stdout
     assert "--engine-profile" in result.stdout
+    assert "--baseline" in result.stdout
     assert "--upgrade-engine" not in result.stdout
 
 
 def test_dry_run_prints_complete_default_plan(tmp_path):
-    result = run_installer(
-        "--dry-run", home=tmp_path, path=isolated_path(tmp_path)
-    )
+    result = run_installer("--dry-run", home=tmp_path, path=isolated_path(tmp_path))
 
     assert result.returncode == 0, result.stderr
-    assert "pkg install -y python rust clang git curl ripgrep libjpeg-turbo" in result.stdout
+    assert (
+        "pkg install -y python rust clang git curl ripgrep libjpeg-turbo"
+        in result.stdout
+    )
     assert "pkg install -y android-tools termux-api" in result.stdout
     assert "pip install --user pipx==1.18.16" in result.stdout
     assert "code-puppy==0.0.720" in result.stdout
@@ -95,6 +100,64 @@ def test_minimal_overlay_only_plan_skips_engine_and_optional_tools(tmp_path):
     assert "DroidPuppy/archive/main.tar.gz" in result.stdout
 
 
+def test_june_brave_baseline_is_overlay_only(tmp_path):
+    bin_dir = isolated_path(tmp_path, include_engine=True)
+
+    result = run_installer(
+        "--dry-run",
+        "--baseline",
+        "june-brave-v1",
+        home=tmp_path,
+        path=bin_dir,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "no build tools or Python packages will be installed" in result.stdout
+    assert "pkg install" not in result.stdout
+    assert "pip install" not in result.stdout
+    assert "pipx install" not in result.stdout
+    assert "pipx upgrade" not in result.stdout
+    assert "baselines/june-brave-v1.json" in result.stdout
+    assert "verify_baseline.py june-brave-v1" in result.stdout
+    for plugin in (
+        "android_brave_bridge",
+        "android_browser_actions",
+        "android_browser_easy",
+        "android_cdp_bridge",
+        "android_cdp_client",
+        "android_friendly_router",
+        "android_utility_kit",
+    ):
+        assert plugin in result.stdout
+
+
+def test_june_brave_baseline_requires_existing_engine(tmp_path):
+    result = run_installer(
+        "--dry-run",
+        "--baseline",
+        "june-brave-v1",
+        home=tmp_path,
+        path=isolated_path(tmp_path),
+    )
+
+    assert result.returncode != 0
+    assert "reuses an existing engine" in result.stderr
+
+
+def test_june_brave_baseline_forbids_engine_repair(tmp_path):
+    result = run_installer(
+        "--dry-run",
+        "--baseline",
+        "june-brave-v1",
+        "--repair-engine",
+        home=tmp_path,
+        path=isolated_path(tmp_path, include_engine=True),
+    )
+
+    assert result.returncode != 0
+    assert "forbidden by protected baseline" in result.stderr
+
+
 def test_existing_engine_is_never_mutated_by_default(tmp_path):
     bin_dir = isolated_path(tmp_path, include_engine=True)
 
@@ -114,12 +177,12 @@ def _write_executable(path: pathlib.Path, content: str) -> None:
 def test_explicit_repair_replaces_only_with_exact_profile(tmp_path):
     bin_dir = isolated_path(tmp_path, include_engine=True)
 
-    result = run_installer(
-        "--dry-run", "--repair-engine", home=tmp_path, path=bin_dir
-    )
+    result = run_installer("--dry-run", "--repair-engine", home=tmp_path, path=bin_dir)
 
     assert result.returncode == 0, result.stderr
-    assert "Repairing Code Puppy with exact engine profile android-0720" in result.stdout
+    assert (
+        "Repairing Code Puppy with exact engine profile android-0720" in result.stdout
+    )
     assert "pipx install --force --backend pip" in result.stdout
     assert "code-puppy==0.0.720" in result.stdout
     assert "pipx upgrade" not in result.stdout
@@ -215,6 +278,13 @@ def test_hermetic_fresh_install_uses_pinned_profile(tmp_path):
     assert "plugins:    1" in result.stdout
 
 
+def test_unknown_protected_baseline_fails_closed():
+    result = run_installer("--dry-run", "--baseline", "latest-circus")
+
+    assert result.returncode != 0
+    assert "Unknown protected baseline" in result.stderr
+
+
 def test_unknown_engine_profile_fails_closed():
     result = run_installer("--dry-run", "--engine-profile", "latest-maybe-lol")
 
@@ -258,6 +328,7 @@ def test_shell_syntax_is_valid():
     result = subprocess.run(
         ["bash", "-n", str(INSTALLER)],
         capture_output=True,
+        check=False,
         text=True,
     )
 
