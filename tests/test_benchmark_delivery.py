@@ -5,11 +5,15 @@ import json
 import pathlib
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "scripts" / "benchmark_delivery.py"
 BASELINE = REPO_ROOT / "baselines" / "june-brave-v1.json"
 CONSTRAINTS = REPO_ROOT / "constraints" / "android-0720.txt"
+SHOWCASE = REPO_ROOT / "docs" / "BENCHMARK_SHOWCASE.md"
+CHART = REPO_ROOT / "docs" / "assets" / "delivery-surface-benchmark.svg"
+RECEIPT = REPO_ROOT / "evidence" / "benchmarks" / "delivery-surface-local-20261122.json"
 
 SPEC = importlib.util.spec_from_file_location("benchmark_delivery", SCRIPT)
 benchmark_delivery = importlib.util.module_from_spec(SPEC)
@@ -126,6 +130,27 @@ def test_cli_writes_same_machine_readable_receipt(tmp_path):
 
     assert completed.returncode == 0, completed.stderr
     assert json.loads(completed.stdout) == json.loads(output.read_text())
+
+
+def test_showcase_matches_published_receipt():
+    receipt = json.loads(RECEIPT.read_text())
+    metrics = {target["label"]: target["metrics"] for target in receipt["targets"]}
+    showcase = SHOWCASE.read_text()
+
+    june = metrics["june-brave-v1"]
+    assert f"{june['plugin_count']} plugins" in showcase
+    assert f"{june['plugin_file_count']} files" in showcase
+    assert f"{june['plugin_bytes']:,} bytes" in showcase
+    assert str(metrics["android-0720"]["constraint_count"]) in showcase
+    for label in ("puppy-0759", "puppy-0890", "puppy-v1"):
+        assert str(metrics[label]["locked_package_count"]) in showcase
+
+
+def test_showcase_chart_is_valid_svg():
+    root = ET.parse(CHART).getroot()
+
+    assert root.tag == "{http://www.w3.org/2000/svg}svg"
+    assert root.attrib["role"] == "img"
 
 
 def test_cli_rejects_malformed_target():

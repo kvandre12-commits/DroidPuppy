@@ -147,7 +147,9 @@ See [`docs/JUNE_BRAVE_BASELINE.md`](docs/JUNE_BRAVE_BASELINE.md) for its exact
 allowlist, forbidden dependency families, provenance, and change-control rule.
 The broader engineering argument is documented in
 [`docs/PLATFORM_SUBSTITUTION_THESIS.md`](docs/PLATFORM_SUBSTITUTION_THESIS.md).
-The benchmark protocol and current offline delivery-surface receipt are in
+The public results are summarized in
+[`docs/BENCHMARK_SHOWCASE.md`](docs/BENCHMARK_SHOWCASE.md). The benchmark
+protocol and offline delivery-surface receipt are in
 [`docs/BENCHMARKING.md`](docs/BENCHMARKING.md) and
 [`evidence/benchmarks/`](evidence/benchmarks/). The hardware-rooted security and
 native mobile compute plan is in
