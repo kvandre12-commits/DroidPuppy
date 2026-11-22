@@ -145,6 +145,8 @@ bash install.sh --baseline june-brave-v1
 
 See [`docs/JUNE_BRAVE_BASELINE.md`](docs/JUNE_BRAVE_BASELINE.md) for its exact
 allowlist, forbidden dependency families, provenance, and change-control rule.
+The broader engineering argument is documented in
+[`docs/PLATFORM_SUBSTITUTION_THESIS.md`](docs/PLATFORM_SUBSTITUTION_THESIS.md).
 
 See [`docs/INSTALL.md`](docs/INSTALL.md) for upgrades, minimal installs,
 troubleshooting, and the manual developer workflow.

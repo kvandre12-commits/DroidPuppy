@@ -1,5 +1,8 @@
 # Protected June Brave Baseline
 
+The architectural rationale is documented in
+[Platform Substitution Thesis](PLATFORM_SUBSTITUTION_THESIS.md).
+
 `june-brave-v1` preserves the Android porting boundary first committed in
 DroidPuppy on 2026-06-13 (`275bd5a8`). It is intentionally narrower than the
 `android-0720` recovery profile.
