@@ -70,6 +70,15 @@ def evaluate(
     if assessment.get("policy_id") != policy_id:
         raise AssessmentError("assessment policy_id does not match policy")
 
+    for field in ("scope", "expansion_principle"):
+        if not isinstance(policy.get(field), str) or not policy[field]:
+            raise AssessmentError(f"policy {field} must be a non-empty string")
+    does_not_block = policy.get("does_not_block")
+    if not isinstance(does_not_block, list) or not does_not_block or not all(
+        isinstance(item, str) and item for item in does_not_block
+    ):
+        raise AssessmentError("policy does_not_block must be a non-empty string array")
+
     candidate_id = assessment.get("candidate_id")
     if not isinstance(candidate_id, str) or not candidate_id:
         raise AssessmentError("candidate_id must be a non-empty string")
@@ -132,6 +141,9 @@ def evaluate(
     return {
         "schema_version": 1,
         "policy_id": policy_id,
+        "policy_scope": policy.get("scope"),
+        "expansion_principle": policy.get("expansion_principle"),
+        "does_not_block": does_not_block,
         "candidate_id": candidate_id,
         "qualified": qualified,
         "decision": "qualify" if qualified else "refuse",

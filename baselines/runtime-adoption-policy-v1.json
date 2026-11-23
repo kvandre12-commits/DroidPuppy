@@ -1,7 +1,17 @@
 {
   "schema_version": 1,
   "policy_id": "runtime-adoption-v1",
-  "description": "Fail-closed qualification gate for mandatory agent runtimes and framework expansions.",
+  "description": "Fail-closed qualification gate for mandatory runtime replacement and framework-wide expansion.",
+  "scope": "Changes that replace the qualified engine boundary or make a framework/provider family mandatory.",
+  "expansion_principle": "Expand the discoverable capability graph through bounded, default-off overlays; keep the permanent model-visible surface small and resolve real native tools just in time.",
+  "does_not_block": [
+    "bounded overlay capabilities",
+    "default-off providers",
+    "platform-native adapters",
+    "just-in-time tool binding",
+    "isolated capability experiments",
+    "new immutable candidate assessments"
+  ],
   "allowed_statuses": [
     "pass",
     "fail",

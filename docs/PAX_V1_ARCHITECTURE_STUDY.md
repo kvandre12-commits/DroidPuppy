@@ -343,6 +343,40 @@ The rule is:
 
 > Borrow mechanisms, not the whole dependency policy.
 
+## Capability growth is the purpose, not the enemy
+
+The runtime-adoption gate is deliberately narrow. It governs changes that
+replace the qualified engine boundary or make an entire framework/provider
+family mandatory. It must never be used to freeze the capability graph.
+
+SharpEdge and DroidPuppy should actively expand through the already-frozen
+three-plane architecture:
+
+```text
+tiny permanent control surface
+    -> large discoverable capability universe
+    -> just-in-time binding of relevant real native tools
+```
+
+That gives the agent more reach without injecting every tool schema into every
+turn or granting every provider permanent authority. Bounded overlay
+capabilities, default-off providers, platform-native adapters, isolated
+experiments, and new immutable candidate assessments are explicitly outside the
+runtime gate's prohibition.
+
+The desired direction is therefore:
+
+```text
+capability graph: broad and growing
+per-turn tool surface: narrow and relevant
+installed authority: bounded and explicit
+runtime ownership: stable and replaceable only by evidence
+```
+
+Minimalism is a delivery discipline, not a vow of incapability. The overlay is
+the attachment plane through which the system grows without surrendering its
+identity, recovery boundary, or target fitness.
+
 ## Adoption gate
 
 Pax should not become a mandatory runtime unless a minimal profile proves all of

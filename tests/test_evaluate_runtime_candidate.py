@@ -47,6 +47,9 @@ def test_real_pax_candidate_is_refused():
     assert receipt["qualified"] is False
     assert receipt["decision"] == "refuse"
     assert receipt["counts"] == {"fail": 5, "pass": 0, "unmeasured": 7}
+    assert receipt["policy_scope"].startswith("Changes that replace")
+    assert "bounded overlay capabilities" in receipt["does_not_block"]
+    assert "discoverable capability graph" in receipt["expansion_principle"]
 
 
 def test_every_evidence_backed_gate_must_pass():
