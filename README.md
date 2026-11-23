@@ -148,8 +148,11 @@ allowlist, forbidden dependency families, provenance, and change-control rule.
 The broader engineering argument is documented in
 [`docs/PLATFORM_SUBSTITUTION_THESIS.md`](docs/PLATFORM_SUBSTITUTION_THESIS.md).
 The public results are summarized in
-[`docs/BENCHMARK_SHOWCASE.md`](docs/BENCHMARK_SHOWCASE.md). The benchmark
-protocol and offline delivery-surface receipt are in
+[`docs/BENCHMARK_SHOWCASE.md`](docs/BENCHMARK_SHOWCASE.md). The architectural
+study of Code Puppy 1.0's move to Pax—and why wholesale adoption does not fit
+our Android-first boundary—is in
+[`docs/PAX_V1_ARCHITECTURE_STUDY.md`](docs/PAX_V1_ARCHITECTURE_STUDY.md). The
+benchmark protocol and offline delivery-surface receipt are in
 [`docs/BENCHMARKING.md`](docs/BENCHMARKING.md) and
 [`evidence/benchmarks/`](evidence/benchmarks/). The hardware-rooted security and
 native mobile compute plan is in
