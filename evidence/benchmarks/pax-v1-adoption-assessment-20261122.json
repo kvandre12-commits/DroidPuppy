@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "policy_id": "runtime-adoption-v1",
+  "candidate_id": "code-puppy-1.0.0rc1-pax",
+  "source_identity": {
+    "repository": "mpfaffenberger/code_puppy",
+    "commit": "6ac4efa3",
+    "version": "1.0.0rc1"
+  },
+  "gates": {
+    "minimal-core": {
+      "status": "fail",
+      "evidence": [
+        "pyproject.toml requests all nine Pax extras",
+        "tests/test_optional_support.py requires every offered Pax extra"
+      ],
+      "note": "The candidate deliberately installs unrelated sandbox and provider support."
+    },
+    "android-reproducible": {
+      "status": "fail",
+      "evidence": [
+        "Local Termux sync attempted native builds including grpcio, cryptography, pydantic-core, jiter, tiktoken, and pillow",
+        "The local bootstrap did not complete"
+      ],
+      "note": "The examined dependency policy is not qualified for this Android target."
+    },
+    "same-model-task-success": {
+      "status": "unmeasured",
+      "evidence": [],
+      "note": "No controlled same-model task trial has been completed."
+    },
+    "startup-budget": {
+      "status": "unmeasured",
+      "evidence": [],
+      "note": "No isolated Android startup latency or peak-memory receipt exists."
+    },
+    "prompt-tool-budget": {
+      "status": "unmeasured",
+      "evidence": [],
+      "note": "No transport-level prompt or tool-schema measurement exists."
+    },
+    "request-amplification": {
+      "status": "unmeasured",
+      "evidence": [],
+      "note": "No same-model provider request and retry comparison exists."
+    },
+    "native-adapters": {
+      "status": "unmeasured",
+      "evidence": [],
+      "note": "Pax supports plugins, but the DroidPuppy native-overlay boundary has not been qualified against v1."
+    },
+    "authority-boundary": {
+      "status": "unmeasured",
+      "evidence": [],
+      "note": "Package and plugin policy were inspected; hostile-input and broker-boundary trials remain outstanding."
+    },
+    "independent-rollback": {
+      "status": "fail",
+      "evidence": [
+        "Pax owns the agent loop, terminal UI, sessions, models, MCP, plugins, and workspaces",
+        "Code Puppy customizes Pax internals through startup replacement contracts"
+      ],
+      "note": "The candidate does not preserve our engine-versus-platform-overlay rollback boundary."
+    },
+    "honest-optionality": {
+      "status": "fail",
+      "evidence": [
+        "Commit be2c2178 installs every Pax extra so no sandbox reports missing support"
+      ],
+      "note": "The candidate converts optional capability absence into mandatory installation."
+    },
+    "offline-recovery": {
+      "status": "fail",
+      "evidence": [
+        "The examined tree resolves five packages from a pinned Pydantic AI Git commit"
+      ],
+      "note": "No independently archived offline recovery closure was qualified."
+    },
+    "earned-cost": {
+      "status": "unmeasured",
+      "evidence": [
+        "Delivery benchmark reports a 185-entry lock graph and five Git sources"
+      ],
+      "note": "Delivery cost is measured, but equivalent task benefit is not."
+    }
+  }
+}

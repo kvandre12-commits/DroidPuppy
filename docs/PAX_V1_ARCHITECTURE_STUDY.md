@@ -364,6 +364,36 @@ the following on real targets:
 
 The examined v1 tree does not pass this gate for our Android target.
 
+## Machine-enforced action
+
+This gate is now executable rather than advisory:
+
+```bash
+python scripts/evaluate_runtime_candidate.py
+```
+
+The evaluator combines:
+
+```text
+baselines/runtime-adoption-policy-v1.json
+evidence/benchmarks/pax-v1-adoption-assessment-20261122.json
+```
+
+It fails closed unless every required gate has an evidence-backed `pass`.
+`fail` and `unmeasured` both refuse qualification; missing, unexpected, or
+malformed gates make the assessment invalid. Exit codes are:
+
+```text
+0  candidate qualified
+1  valid assessment, qualification refused
+2  invalid policy or assessment
+```
+
+The current Pax v1 assessment is intentionally refused. This does not blacklist
+Pax forever: a new immutable assessment may qualify a narrower successor after
+all measurements pass. It prevents enthusiasm, package availability, or a
+smaller local repository from silently becoming architectural approval.
+
 ## Evidence boundary
 
 This study is grounded in the locally preserved v1 tree at merge commit

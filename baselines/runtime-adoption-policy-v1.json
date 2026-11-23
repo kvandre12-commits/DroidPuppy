@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "policy_id": "runtime-adoption-v1",
+  "description": "Fail-closed qualification gate for mandatory agent runtimes and framework expansions.",
+  "allowed_statuses": [
+    "pass",
+    "fail",
+    "unmeasured"
+  ],
+  "gates": [
+    {
+      "id": "minimal-core",
+      "requirement": "Core installation excludes unrelated provider and sandbox extras."
+    },
+    {
+      "id": "android-reproducible",
+      "requirement": "Android and Termux installation is reproducible without uncontrolled source builds."
+    },
+    {
+      "id": "same-model-task-success",
+      "requirement": "Required tasks succeed using the same model where comparison is possible."
+    },
+    {
+      "id": "startup-budget",
+      "requirement": "Startup latency and peak memory stay within an approved target budget."
+    },
+    {
+      "id": "prompt-tool-budget",
+      "requirement": "Prompt and tool-schema costs are measured and stay within an approved budget."
+    },
+    {
+      "id": "request-amplification",
+      "requirement": "Provider requests, retries, and repeated context do not amplify materially."
+    },
+    {
+      "id": "native-adapters",
+      "requirement": "Platform-native adapters remain first-class and independently replaceable."
+    },
+    {
+      "id": "authority-boundary",
+      "requirement": "Authority is explicit, bounded, and at least as strong as the protected baseline."
+    },
+    {
+      "id": "independent-rollback",
+      "requirement": "Engine and actuator layers retain independent rollback paths."
+    },
+    {
+      "id": "honest-optionality",
+      "requirement": "Missing optional support remains an honest, nonfatal state."
+    },
+    {
+      "id": "offline-recovery",
+      "requirement": "Security maintenance and provenance can be reproduced and recovered offline."
+    },
+    {
+      "id": "earned-cost",
+      "requirement": "Measured capability gain exceeds dependency, token, security, and operational cost."
+    }
+  ]
+}
