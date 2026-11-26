@@ -1,0 +1,8 @@
+  × No solution found when resolving dependencies:
+  ╰─▶ Because cryptography>=42.0.0 has no usable wheels and
+      pydantic-ai-pax>=0.75.0 depends on cryptography>=42, we can conclude
+      that pydantic-ai-pax>=0.75.0 cannot be used.
+      And because you require pydantic-ai-pax==0.75.0, we can conclude that
+      your requirements are unsatisfiable.
+
+hint: Wheels are required for `cryptography` because building from source is disabled for all packages (i.e., with `--no-build`)
