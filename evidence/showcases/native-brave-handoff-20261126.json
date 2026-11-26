@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "receipt_type": "droidpuppy-native-platform-substitution",
+  "captured_at_utc": "2026-11-26T00:46:23Z",
+  "claim": "The protected June DroidPuppy overlay handed a URL from Termux to installed Brave through Android's native activity manager without installing packages or using Playwright.",
+  "source": {
+    "repository": "kvandre12-commits/DroidPuppy",
+    "study_commit": "e374d51de497aabe4c597edc142e243243a90340",
+    "baseline_id": "june-brave-v1",
+    "baseline_origin_commit": "275bd5a8c9f4023a56be08cc454af585e3586d3f",
+    "code_puppy_source_commit": "d449947010d8d0662aa52dd050eafabbb5f5370c",
+    "android_boot_guard_commit": "24c95d82d00088a1695bb8aea21bd15d5d318611"
+  },
+  "input_hashes": {
+    "baseline_manifest_sha256": "dffc69697ec1f6c3834b5bde89809ded72fd53c863f6cb749f89bfa884a4c19d",
+    "brave_tooling_sha256": "1a486d31b5f2c2f270f9180e724dafb26c8c161041447fae86a9b7ebddc53950",
+    "brave_registration_sha256": "b21bbce4749078314f095c36ba44d3753e3261abe3f1d61874fefca59dbf3462"
+  },
+  "baseline_verification": {
+    "valid": true,
+    "engine_policy": "reuse-only",
+    "package_install_count": 0,
+    "plugin_count": 7,
+    "errors": []
+  },
+  "device": {
+    "manufacturer": "samsung",
+    "model": "SM-S931U",
+    "android_version": "17",
+    "is_android": true,
+    "is_termux": true
+  },
+  "capability_preflight": {
+    "brave_installed": true,
+    "chrome_installed": true,
+    "recommended_default": "brave",
+    "activity_manager": "/data/data/com.termux/files/usr/bin/am"
+  },
+  "action": {
+    "adapter": "code_puppy.plugins.android_brave_bridge.tooling.open_android_url",
+    "url": "https://pydantic.dev/docs/ai/",
+    "browser": "brave",
+    "dry_run_first": true,
+    "command": [
+      "am",
+      "start",
+      "-a",
+      "android.intent.action.VIEW",
+      "-p",
+      "com.brave.browser",
+      "-d",
+      "https://pydantic.dev/docs/ai/"
+    ]
+  },
+  "result": {
+    "success": true,
+    "exit_code": 0,
+    "stderr": "",
+    "stdout": "Starting: Intent { act=android.intent.action.VIEW dat=https://pydantic.dev/... pkg=com.brave.browser }"
+  },
+  "execution_boundary": {
+    "model_provider_requests": 0,
+    "python_package_installs": 0,
+    "engine_changes": 0,
+    "protected_baseline_changes": 0,
+    "desktop_browser_runtime": false,
+    "playwright_used": false,
+    "native_primitive": "android.intent.action.VIEW"
+  },
+  "limitations": [
+    "This receipt proves native URL handoff, not DOM automation or page correctness.",
+    "Android reported successful intent dispatch; the receipt does not independently inspect Brave's rendered page.",
+    "The zero-package figure is the incremental protected overlay cost, not the complete pre-existing Code Puppy engine environment."
+  ]
+}
